@@ -26,4 +26,5 @@ type Trip struct {
 	// Itineraries []Itinerary `gorm:"foreignKey:TripID" json:"itineraries,omitempty"`
 
 	Activities []Activity `gorm:"foreignKey:TripID" json:"activities,omitempty"`
+	IsPublic   bool       `gorm:"default:true" json:"is_public"`
 }

@@ -9,7 +9,9 @@ import (
 type TripRepository interface {
 	CreateTrip(trip *models.Trip) error
 	GetTripByID(id uint) (*models.Trip, error)
-	GetAllTrips() ([]models.Trip, error)
+	GetTripByUserID(userID uint) ([]models.Trip, error)
+	GetPublicTrips() ([]models.Trip, error)
+	GetByDestination(destination string) ([]models.Trip, error)
 	UpdateTrip(trip *models.Trip) error
 	DeleteTrip(id uint) error
 }
@@ -35,14 +37,32 @@ func (r *tripRepository) GetTripByID(id uint) (*models.Trip, error) {
 	return &trip, nil
 }
 
-func (r *tripRepository) GetAllTrips() ([]models.Trip, error) {
+func (r *tripRepository) GetTripByUserID(userID uint) ([]models.Trip, error) {
 	var trips []models.Trip
-	result := r.db.Find(&trips).Error
+	result := r.db.Where("user_id = ?", userID).Find(&trips).Error
 	if result != nil {
 		return nil, result
 	}
 	return trips, nil
 }
+
+func (r *tripRepository) GetPublicTrips() ([]models.Trip, error) {
+	var trips []models.Trip
+	result := r.db.Where("is_public = ?", true).Find(&trips).Error
+	if result != nil {
+		return nil, result
+	}
+	return trips, nil
+}
+func (r *tripRepository) GetByDestination(destination string) ([]models.Trip, error) {
+	var trips []models.Trip
+	result := r.db.Where("destination LIKE ? AND is_public= ?", "%"+destination+"%", true).Find(&trips).Error
+	if result != nil {
+		return nil, result
+	}
+	return trips, nil
+}
+
 func (r *tripRepository) UpdateTrip(trip *models.Trip) error {
 	return r.db.Save(trip).Error
 }

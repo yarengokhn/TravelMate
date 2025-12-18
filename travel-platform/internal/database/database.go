@@ -3,6 +3,7 @@ package database
 import (
 	"log"
 	"travel-platform/travel-platform/internal/models"
+
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -32,7 +33,8 @@ func ConnectDatabase() error {
 		&models.User{},
 		&models.Trip{},
 		&models.Expense{},
-		&models.Activity{})
+		&models.Activity{},
+		&models.ChatMessage{})
 	if error != nil {
 		log.Fatal("Failed to migrate database:", error)
 	}
