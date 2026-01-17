@@ -60,6 +60,22 @@ func GetSession(sessionID string) (*Session, bool) {
 
 }
 
+func DeleteSession(sessionID string) {
+	mu.Lock()
+	delete(sessions, sessionID)
+	mu.Unlock()
+}
+
+func CleanExpiredSessions() {
+	mu.Lock()
+	defer mu.Unlock()
+	for sessionID, session := range sessions {
+		if time.Now().After(session.ExpiresAt) {
+			delete(sessions, sessionID)
+		}
+	}
+}
+
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
@@ -80,4 +96,9 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		next.ServeHTTP(w, r)
 
 	}
+}
+
+func GetUserIDFromContext(r *http.Request) (uint, bool) {
+	userID, ok := r.Context().Value("user_id").(uint)
+	return userID, ok
 }
