@@ -11,6 +11,7 @@ import (
 
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/gorilla/mux"
 )
@@ -63,33 +64,30 @@ func NewTemplateHandler(userService services.UserService, tripService services.T
 		},
 	}
 
-	// Tüm template dosyalarını listele
-	files := []string{
-		"web/templates/layout/base.html",
-		"web/templates/partials/navbar.html",
-		"web/templates/partials/footer.html",
-		"web/templates/pages/home.html",
-		"web/templates/pages/login.html",
-		"web/templates/pages/register.html",
-		"web/templates/pages/dashboard.html",
-		"web/templates/pages/create_trip.html",
-		"web/templates/pages/trip_detail.html",
-		"web/templates/pages/explore.html",
+	// Load shared templates (layouts and partials)
+	// We do NOT load pages here to avoid "content" block overwrite
+	layoutFiles, err := filepath.Glob("web/templates/layout/*.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	partialFiles, err := filepath.Glob("web/templates/partials/*.html")
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// Her dosyanın varlığını kontrol et
-	for _, file := range files {
-		if _, err := os.Stat(file); os.IsNotExist(err) {
-			log.Fatalf("❌ Template dosyası bulunamadı: %s", file)
+	sharedFiles := append(layoutFiles, partialFiles...)
+
+	// Create the base template with functions and shared files
+	tmpl := template.New("").Funcs(funcMap)
+	if len(sharedFiles) > 0 {
+		var err error
+		tmpl, err = tmpl.ParseFiles(sharedFiles...)
+		if err != nil {
+			log.Fatalf("❌ Shared templates error: %v", err)
 		}
 	}
 
-	tmpl, err := template.New("").Funcs(funcMap).ParseFiles(files...)
-	if err != nil {
-		log.Fatalf("❌ Template yükleme hatası: %v", err)
-	}
-
-	log.Println("✅ Templates yüklendi")
+	log.Println("✅ Shared templates loaded")
 
 	return &TemplateHandler{
 		templates:   tmpl,
@@ -98,11 +96,32 @@ func NewTemplateHandler(userService services.UserService, tripService services.T
 	}
 }
 
-// Helper method - Template render etmek için
-func (h *TemplateHandler) render(w http.ResponseWriter, tmpl string, data *TemplateData) {
-	err := h.templates.ExecuteTemplate(w, tmpl, data)
+// Helper method - Request-scoped render
+func (h *TemplateHandler) render(w http.ResponseWriter, tmplName string, data *TemplateData) {
+	// 1. Clone shared templates
+	tmpl, err := h.templates.Clone()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Template clone error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Parse the specific page
+	pagePath := filepath.Join("web", "templates", "pages", tmplName)
+	if _, err := os.Stat(pagePath); os.IsNotExist(err) {
+		http.Error(w, "Template not found: "+tmplName, http.StatusNotFound)
+		return
+	}
+
+	_, err = tmpl.ParseFiles(pagePath)
+	if err != nil {
+		http.Error(w, "Page parse error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Execute the specific page template
+	err = tmpl.ExecuteTemplate(w, tmplName, data)
+	if err != nil {
+		http.Error(w, "Render error: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 
