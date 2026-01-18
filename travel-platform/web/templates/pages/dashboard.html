@@ -1,0 +1,150 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <div>
+            <h1>Welcome back, {{.User.FirstName}}!</h1>
+            <p>Manage your trips and explore new destinations</p>
+        </div>
+        <a href="/trips/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Trip
+        </a>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <i class="fas fa-suitcase"></i>
+            <div class="stat-info">
+                <h3>{{if .Data}}{{len .Data}}{{else}}0{{end}}</h3>
+                <p>Total Trips</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <i class="fas fa-map-marked-alt"></i>
+            <div class="stat-info">
+                <h3>
+                    {{if .Data}}
+                    {{$destinations := 0}}
+                    {{range .Data}}{{$destinations = add $destinations 1}}{{end}}
+                    {{$destinations}}
+                    {{else}}0{{end}}
+                </h3>
+                <p>Destinations</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <i class="fas fa-globe"></i>
+            <div class="stat-info">
+                <h3>
+                    {{if .Data}}
+                    {{$public := 0}}
+                    {{range .Data}}{{if .IsPublic}}{{$public = add $public 1}}{{end}}{{end}}
+                    {{$public}}
+                    {{else}}0{{end}}
+                </h3>
+                <p>Public Trips</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <i class="fas fa-calendar-check"></i>
+            <div class="stat-info">
+                <h3>
+                    {{if .Data}}
+                    {{$upcoming := 0}}
+                    {{$now := now}}
+                    {{range .Data}}
+                    {{if .StartDate.After $now}}{{$upcoming = add $upcoming 1}}{{end}}
+                    {{end}}
+                    {{$upcoming}}
+                    {{else}}0{{end}}
+                </h3>
+                <p>Upcoming</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="section-header">
+            <h2><i class="fas fa-suitcase"></i> My Trips</h2>
+            <div class="filter-tabs">
+                <button class="tab-btn active" data-filter="all">All</button>
+                <button class="tab-btn" data-filter="upcoming">Upcoming</button>
+                <button class="tab-btn" data-filter="past">Past</button>
+            </div>
+        </div>
+
+        {{if .Data}}
+        <div class="trip-list">
+            {{range .Data}}
+            <div class="trip-item">
+                <div class="trip-item-header">
+                    <div>
+                        <h3>{{.Title}}</h3>
+                        <span class="trip-destination">
+                            <i class="fas fa-map-marker-alt"></i> {{.Destination}}
+                        </span>
+                    </div>
+                    <div class="trip-badges">
+                        {{if .IsPublic}}
+                        <span class="badge badge-success">
+                            <i class="fas fa-globe"></i> Public
+                        </span>
+                        {{else}}
+                        <span class="badge badge-secondary">
+                            <i class="fas fa-lock"></i> Private
+                        </span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="trip-item-body">
+                    <p>{{.Description}}</p>
+                    <div class="trip-details">
+                        <span>
+                            <i class="far fa-calendar"></i>
+                            {{.StartDate.Format "Jan 2, 2006"}} - {{.EndDate.Format "Jan 2, 2006"}}
+                        </span>
+                        {{if .Budget}}
+                        <span>
+                            <i class="fas fa-euro-sign"></i>
+                            Budget: €{{printf "%.2f" .Budget}}
+                        </span>
+                        {{end}}
+                        {{if .Activities}}
+                        <span>
+                            <i class="fas fa-hiking"></i>
+                            {{len .Activities}} Activities
+                        </span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="trip-item-actions">
+                    <a href="/trips/{{.ID}}" class="btn btn-small btn-secondary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="/trips/{{.ID}}/edit" class="btn btn-small btn-outline">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <button class="btn btn-small btn-danger" onclick="deleteTrip('{{.ID}}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="empty-state">
+            <i class="fas fa-suitcase-rolling"></i>
+            <h3>No trips yet</h3>
+            <p>Start planning your first adventure!</p>
+            <a href="/trips/new" class="btn btn-primary">Create Your First Trip</a>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,256 @@
+{{template "base" .}}
+
+{{define "content"}}
+{{if .Data}}
+{{$trip := .Data}}
+<div class="trip-detail">
+    <div class="trip-header">
+        <div class="trip-header-content">
+            <div class="trip-breadcrumb">
+                <a href="/"><i class="fas fa-home"></i> Home</a>
+                <span>/</span>
+                <a href="/explore">Explore</a>
+                <span>/</span>
+                <span>{{$trip.Title}}</span>
+            </div>
+
+            <h1>{{$trip.Title}}</h1>
+
+            <div class="trip-header-meta">
+                <span class="trip-location">
+                    <i class="fas fa-map-marker-alt"></i> {{$trip.Destination}}
+                </span>
+                <span class="trip-dates">
+                    <i class="far fa-calendar"></i>
+                    {{$trip.StartDate.Format "Jan 2, 2006"}} - {{$trip.EndDate.Format "Jan 2, 2006"}}
+                </span>
+                {{if $trip.IsPublic}}
+                <span class="badge badge-success">
+                    <i class="fas fa-globe"></i> Public
+                </span>
+                {{end}}
+            </div>
+        </div>
+
+        {{if .IsAuthenticated}}
+        {{if eq $trip.UserID .User.ID}}
+        <div class="trip-header-actions">
+            <a href="/trips/{{$trip.ID}}/edit" class="btn btn-secondary">
+                <i class="fas fa-edit"></i> Edit Trip
+            </a>
+            <button onclick="deleteTrip('{{$trip.ID}}')" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+        {{end}}
+        {{end}}
+    </div>
+
+    <div class="trip-detail-grid">
+        <div class="trip-main">
+            <!-- Overview Section -->
+            <section class="detail-section">
+                <h2><i class="fas fa-info-circle"></i> Overview</h2>
+                <div class="detail-content">
+                    <p>{{if $trip.Description}}{{$trip.Description}}{{else}}No description provided.{{end}}</p>
+                </div>
+            </section>
+
+            <!-- Budget Section -->
+            {{if $trip.Budget}}
+            <section class="detail-section">
+                <h2><i class="fas fa-euro-sign"></i> Budget</h2>
+                <div class="budget-info">
+                    <div class="budget-amount">
+                        <span class="budget-label">Total Budget</span>
+                        <span class="budget-value">€{{printf "%.2f" $trip.Budget}}</span>
+                    </div>
+                    {{if $trip.Expenses}}
+                    <div class="budget-spent">
+                        <span class="budget-label">Spent</span>
+                        <span class="budget-value spent">
+                            €{{$spent := 0.0}}
+                            {{range $trip.Expenses}}{{$spent = add $spent .Amount}}{{end}}
+                            {{printf "%.2f" $spent}}
+                        </span>
+                    </div>
+                    <div class="budget-remaining">
+                        <span class="budget-label">Remaining</span>
+                        <span class="budget-value">
+                            €{{printf "%.2f" (sub $trip.Budget $spent)}}
+                        </span>
+                    </div>
+                    {{end}}
+                </div>
+            </section>
+            {{end}}
+
+            <!-- Activities Section -->
+            <section class="detail-section">
+                <div class="section-title">
+                    <h2><i class="fas fa-hiking"></i> Activities</h2>
+                    {{if .IsAuthenticated}}
+                    {{if eq $trip.UserID .User.ID}}
+                    <button class="btn btn-small btn-primary">
+                        <i class="fas fa-plus"></i> Add Activity
+                    </button>
+                    {{end}}
+                    {{end}}
+                </div>
+
+                {{if $trip.Activities}}
+                <div class="activity-timeline">
+                    {{range $trip.Activities}}
+                    <div class="activity-item">
+                        <div class="activity-time">
+                            <i class="far fa-clock"></i>
+                            {{.StartTime.Format "15:04"}}
+                        </div>
+                        <div class="activity-content">
+                            <h3>{{.Name}}</h3>
+                            {{if .Location}}
+                            <p class="activity-location">
+                                <i class="fas fa-map-marker-alt"></i> {{.Location}}
+                            </p>
+                            {{end}}
+                            {{if .Description}}
+                            <p class="activity-description">{{.Description}}</p>
+                            {{end}}
+                            {{if .Rating}}
+                            <div class="activity-rating">
+                                {{range $i := iterate .Rating}}
+                                <i class="fas fa-star"></i>
+                                {{end}}
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <div class="empty-message">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>No activities planned yet</p>
+                </div>
+                {{end}}
+            </section>
+
+            <!-- Expenses Section -->
+            <section class="detail-section">
+                <div class="section-title">
+                    <h2><i class="fas fa-receipt"></i> Expenses</h2>
+                    {{if .IsAuthenticated}}
+                    {{if eq $trip.UserID .User.ID}}
+                    <button class="btn btn-small btn-primary">
+                        <i class="fas fa-plus"></i> Add Expense
+                    </button>
+                    {{end}}
+                    {{end}}
+                </div>
+
+                {{if $trip.Expenses}}
+                <div class="expense-list">
+                    {{range $trip.Expenses}}
+                    <div class="expense-item">
+                        <div class="expense-icon">
+                            <i class="fas fa-{{if eq .Category " food"}}utensils{{else if eq .Category "transport"
+                                }}bus{{else if eq .Category "accommodation" }}hotel{{else}}shopping-bag{{end}}"></i>
+                        </div>
+                        <div class="expense-details">
+                            <span class="expense-category">{{.Category}}</span>
+                            <span class="expense-date">{{.ExpenseDate.Format "Jan 2, 2006"}}</span>
+                        </div>
+                        <div class="expense-amount">
+                            {{.Currency}} {{printf "%.2f" .Amount}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <div class="empty-message">
+                    <i class="fas fa-coins"></i>
+                    <p>No expenses recorded yet</p>
+                </div>
+                {{end}}
+            </section>
+        </div>
+
+        <div class="trip-sidebar">
+            <!-- Trip Info Card -->
+            <div class="info-card">
+                <h3><i class="fas fa-user"></i> Trip Organizer</h3>
+                <div class="organizer-info">
+                    <div class="organizer-avatar">
+                        {{if $trip.User}}
+                        {{substr $trip.User.FirstName 0 1}}{{substr $trip.User.LastName 0 1}}
+                        {{end}}
+                    </div>
+                    <div class="organizer-details">
+                        {{if $trip.User}}
+                        <p class="organizer-name">{{$trip.User.FirstName}} {{$trip.User.LastName}}</p>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duration Card -->
+            <div class="info-card">
+                <h3><i class="fas fa-calendar-alt"></i> Duration</h3>
+                <div class="duration-info">
+                    <p class="duration-days">
+                        {{$days := daysBetween $trip.StartDate $trip.EndDate}}
+                        {{$days}} {{if eq $days 1}}day{{else}}days{{end}}
+                    </p>
+                    <p class="duration-dates">
+                        {{$trip.StartDate.Format "Jan 2"}} - {{$trip.EndDate.Format "Jan 2, 2006"}}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Share Card -->
+            {{if $trip.IsPublic}}
+            <div class="info-card">
+                <h3><i class="fas fa-share-alt"></i> Share This Trip</h3>
+                <div class="share-buttons">
+                    <button class="share-btn" onclick="shareTrip('facebook')">
+                        <i class="fab fa-facebook"></i>
+                    </button>
+                    <button class="share-btn" onclick="shareTrip('twitter')">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="share-btn" onclick="shareTrip('linkedin')">
+                        <i class="fab fa-linkedin"></i>
+                    </button>
+                    <button class="share-btn" onclick="copyLink()">
+                        <i class="fas fa-link"></i>
+                    </button>
+                </div>
+            </div>
+            {{end}}
+
+            <!-- Actions Card -->
+            {{if .IsAuthenticated}}
+            <div class="info-card">
+                <h3><i class="fas fa-tools"></i> Actions</h3>
+                <div class="action-buttons">
+                    <button class="btn btn-block btn-secondary">
+                        <i class="fas fa-download"></i> Export Data
+                    </button>
+                    <button class="btn btn-block btn-outline">
+                        <i class="fas fa-print"></i> Print Itinerary
+                    </button>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{else}}
+<div class="error-state">
+    <i class="fas fa-exclamation-triangle"></i>
+    <h2>Trip Not Found</h2>
+    <p>The trip you're looking for doesn't exist or has been removed.</p>
+    <a href="/explore" class="btn btn-primary">Browse Other Trips</a>
+</div>
+{{end}}
+{{end}}

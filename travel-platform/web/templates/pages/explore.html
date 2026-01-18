@@ -1,0 +1,250 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="explore-page">
+    <div class="explore-header">
+        <div class="explore-header-content">
+            <h1><i class="fas fa-compass"></i> Explore Trips</h1>
+            <p>Discover amazing travel experiences shared by our community</p>
+        </div>
+        {{if .IsAuthenticated}}
+        <a href="/trips/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Trip
+        </a>
+        {{end}}
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="explore-filters">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by destination..." onkeyup="searchTrips()">
+        </div>
+
+        <div class="filter-options">
+            <select id="sortBy" onchange="sortTrips()" class="filter-select">
+                <option value="recent">Most Recent</option>
+                <option value="budget-low">Budget: Low to High</option>
+                <option value="budget-high">Budget: High to Low</option>
+                <option value="duration">Duration</option>
+            </select>
+
+            <select id="filterMonth" onchange="filterByMonth()" class="filter-select">
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Trip Count -->
+    <div class="results-info">
+        <p id="tripCount">
+            {{if .Data}}
+            Showing {{len .Data}} {{if eq (len .Data) 1}}trip{{else}}trips{{end}}
+            {{else}}
+            No trips found
+            {{end}}
+        </p>
+    </div>
+
+    <!-- Trips Grid -->
+    {{if .Data}}
+    <div class="trip-grid" id="tripGrid">
+        {{range .Data}}
+        <div class="trip-card" data-destination="{{.Destination | lower}}" data-budget="{{.Budget}}"
+            data-start-date="{{.StartDate.Format " 2006-01-02"}}" data-month="{{.StartDate.Month}}">
+            <div class="trip-card-image">
+                <img src="/static/img/placeholder-trip.jpg" alt="{{.Destination}}">
+                <div class="trip-card-overlay">
+                    <span class="trip-duration">
+                        <i class="far fa-calendar"></i>
+                        {{$days := daysBetween .StartDate .EndDate}}
+                        {{$days}} {{if eq $days 1}}day{{else}}days{{end}}
+                    </span>
+                </div>
+            </div>
+
+            <div class="trip-card-header">
+                <h3>{{.Title}}</h3>
+                <span class="trip-destination">
+                    <i class="fas fa-map-marker-alt"></i> {{.Destination}}
+                </span>
+            </div>
+
+            <div class="trip-card-body">
+                <p class="trip-description">
+                    {{if .Description}}
+                    {{if gt (len .Description) 100}}
+                    {{slice .Description 0 100}}...
+                    {{else}}
+                    {{.Description}}
+                    {{end}}
+                    {{else}}
+                    No description available.
+                    {{end}}
+                </p>
+
+                <div class="trip-meta">
+                    <span>
+                        <i class="far fa-calendar"></i>
+                        {{.StartDate.Format "Jan 2, 2006"}}
+                    </span>
+                    {{if .Budget}}
+                    <span class="trip-budget">
+                        <i class="fas fa-euro-sign"></i>
+                        €{{printf "%.0f" .Budget}}
+                    </span>
+                    {{end}}
+                </div>
+
+                {{if .Activities}}
+                <div class="trip-stats">
+                    <span>
+                        <i class="fas fa-hiking"></i>
+                        {{len .Activities}} {{if eq (len .Activities) 1}}activity{{else}}activities{{end}}
+                    </span>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="trip-card-footer">
+                <div class="trip-organizer">
+                    {{if .User}}
+                    <div class="organizer-avatar-small">
+                        {{substr .User.FirstName 0 1}}{{substr .User.LastName 0 1}}
+                    </div>
+                    <span>{{.User.FirstName}}</span>
+                    {{end}}
+                </div>
+                <a href="/trips/{{.ID}}" class="btn btn-small btn-primary">
+                    View Details <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+        <i class="fas fa-globe-americas"></i>
+        <h3>No Public Trips Available</h3>
+        <p>Be the first to share your travel experience!</p>
+        {{if .IsAuthenticated}}
+        <a href="/trips/new" class="btn btn-primary">Create Your First Trip</a>
+        {{else}}
+        <a href="/register" class="btn btn-primary">Join TravelMate</a>
+        {{end}}
+    </div>
+    {{end}}
+
+    <!-- Popular Destinations -->
+    <section class="popular-destinations">
+        <h2><i class="fas fa-fire"></i> Popular Destinations</h2>
+        <div class="destination-tags">
+            <button class="destination-tag" onclick="filterByDestination('Paris')">
+                <i class="fas fa-map-marker-alt"></i> Paris
+            </button>
+            <button class="destination-tag" onclick="filterByDestination('Tokyo')">
+                <i class="fas fa-map-marker-alt"></i> Tokyo
+            </button>
+            <button class="destination-tag" onclick="filterByDestination('New York')">
+                <i class="fas fa-map-marker-alt"></i> New York
+            </button>
+            <button class="destination-tag" onclick="filterByDestination('Barcelona')">
+                <i class="fas fa-map-marker-alt"></i> Barcelona
+            </button>
+            <button class="destination-tag" onclick="filterByDestination('Rome')">
+                <i class="fas fa-map-marker-alt"></i> Rome
+            </button>
+            <button class="destination-tag" onclick="filterByDestination('London')">
+                <i class="fas fa-map-marker-alt"></i> London
+            </button>
+        </div>
+    </section>
+</div>
+
+<script>
+    // Search functionality
+    function searchTrips() {
+        const searchValue = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.trip-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const destination = card.dataset.destination;
+            if (destination.includes(searchValue)) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        updateTripCount(visibleCount);
+    }
+
+    // Sort functionality
+    function sortTrips() {
+        const sortBy = document.getElementById('sortBy').value;
+        const grid = document.getElementById('tripGrid');
+        const cards = Array.from(document.querySelectorAll('.trip-card'));
+
+        cards.sort((a, b) => {
+            switch (sortBy) {
+                case 'budget-low':
+                    return parseFloat(a.dataset.budget || 0) - parseFloat(b.dataset.budget || 0);
+                case 'budget-high':
+                    return parseFloat(b.dataset.budget || 0) - parseFloat(a.dataset.budget || 0);
+                case 'duration':
+                    const daysA = parseInt(a.querySelector('.trip-duration').textContent);
+                    const daysB = parseInt(b.querySelector('.trip-duration').textContent);
+                    return daysB - daysA;
+                default: // recent
+                    return new Date(b.dataset.startDate) - new Date(a.dataset.startDate);
+            }
+        });
+
+        cards.forEach(card => grid.appendChild(card));
+    }
+
+    // Filter by month
+    function filterByMonth() {
+        const month = document.getElementById('filterMonth').value;
+        const cards = document.querySelectorAll('.trip-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            if (!month || card.dataset.month === month) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        updateTripCount(visibleCount);
+    }
+
+    // Filter by destination tag
+    function filterByDestination(destination) {
+        document.getElementById('searchInput').value = destination;
+        searchTrips();
+    }
+
+    // Update trip count
+    function updateTripCount(count) {
+        const countEl = document.getElementById('tripCount');
+        countEl.textContent = `Showing ${count} ${count === 1 ? 'trip' : 'trips'}`;
+    }
+</script>
+{{end}}

@@ -1,0 +1,40 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    {{template "navbar" .}}
+
+    {{if .Error}}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        {{.Error}}
+    </div>
+    {{end}}
+
+    {{if .Success}}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        {{.Success}}
+    </div>
+    {{end}}
+
+    <main class="container">
+        {{template "content" .}}
+    </main>
+
+    {{template "footer" .}}
+
+    <script src="/static/js/main.js"></script>
+</body>
+
+</html>
+{{end}}

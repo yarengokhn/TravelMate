@@ -1,0 +1,53 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fas fa-plane-departure"></i>
+            <h2>Welcome Back</h2>
+            <p>Login to continue your travel journey</p>
+        </div>
+
+        <form action="/api/users/login" method="POST" class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label for="email">
+                    <i class="fas fa-envelope"></i> Email
+                </label>
+                <input type="email" id="email" name="email" required placeholder="your.email@example.com"
+                    autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" id="password" name="password" required placeholder="Enter your password"
+                    autocomplete="current-password">
+            </div>
+
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="remember">
+                    <span>Remember me</span>
+                </label>
+                <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="/register">Register here</a></p>
+        </div>
+    </div>
+
+    <div class="auth-illustration">
+        <i class="fas fa-globe-americas"></i>
+        <h3>Explore the World</h3>
+        <p>Connect with travelers, share experiences, and discover new destinations</p>
+    </div>
+</div>
+{{end}}

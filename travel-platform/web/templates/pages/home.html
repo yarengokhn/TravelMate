@@ -1,0 +1,94 @@
+{{template "base" .}}
+
+{{define "content"}}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Discover Your Next Adventure</h1>
+        <p>Plan trips, connect with travelers, and explore the world together</p>
+        <div class="hero-actions">
+            {{if not .IsAuthenticated}}
+            <a href="/register" class="btn btn-large btn-primary">Get Started</a>
+            <a href="/explore" class="btn btn-large btn-secondary">Explore Trips</a>
+            {{else}}
+            <a href="/trips/new" class="btn btn-large btn-primary">Create a Trip</a>
+            <a href="/dashboard" class="btn btn-large btn-secondary">My Dashboard</a>
+            {{end}}
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Why Choose TravelMate?</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <i class="fas fa-map-marked-alt"></i>
+            <h3>Plan Your Trips</h3>
+            <p>Create detailed itineraries with activities, expenses, and timelines</p>
+        </div>
+
+        <div class="feature-card">
+            <i class="fas fa-users"></i>
+            <h3>Connect with Travelers</h3>
+            <p>Join location-based chat rooms and meet fellow adventurers</p>
+        </div>
+
+        <div class="feature-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Track Expenses</h3>
+            <p>Keep your budget in check with expense tracking and analysis</p>
+        </div>
+
+        <div class="feature-card">
+            <i class="fas fa-lightbulb"></i>
+            <h3>Get Recommendations</h3>
+            <p>Receive personalized travel suggestions based on your preferences</p>
+        </div>
+    </div>
+</section>
+
+<section class="recent-trips">
+    <h2>Featured Public Trips</h2>
+    {{if .Data}}
+    <div class="trip-grid">
+        {{range .Data}}
+        <div class="trip-card">
+            <div class="trip-card-header">
+                <h3>{{.Title}}</h3>
+                <span class="trip-destination">
+                    <i class="fas fa-map-marker-alt"></i> {{.Destination}}
+                </span>
+            </div>
+            <div class="trip-card-body">
+                <p class="trip-description">{{.Description}}</p>
+                <div class="trip-meta">
+                    <span><i class="far fa-calendar"></i> {{.StartDate.Format "Jan 2, 2006"}} - {{.EndDate.Format
+                        "Jan 2, 2006"}}</span>
+                    {{if .Budget}}
+                    <span><i class="fas fa-euro-sign"></i> €{{printf "%.2f" .Budget}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="trip-card-footer">
+                <a href="/trips/{{.ID}}" class="btn btn-small">View Details</a>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+        <i class="fas fa-suitcase"></i>
+        <p>No public trips available yet. Be the first to share your adventure!</p>
+    </div>
+    {{end}}
+</section>
+
+<section class="cta-section">
+    <div class="cta-content">
+        <h2>Ready to Start Your Journey?</h2>
+        <p>Join thousands of travelers planning their dream vacations</p>
+        {{if not .IsAuthenticated}}
+        <a href="/register" class="btn btn-large btn-primary">Create Free Account</a>
+        {{end}}
+    </div>
+</section>
+{{end}}
