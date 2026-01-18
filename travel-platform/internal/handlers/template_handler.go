@@ -232,7 +232,7 @@ func (h *TemplateHandler) TripDetailPage(w http.ResponseWriter, r *http.Request)
 			Title: "Trip Not Found - TravelMate",
 			Error: "The trip you're looking for doesn't exist",
 		}
-		h.render(w, "tripdetail.html", data)
+		h.render(w, "trip_detail.html", data)
 		return
 	}
 
@@ -248,7 +248,7 @@ func (h *TemplateHandler) TripDetailPage(w http.ResponseWriter, r *http.Request)
 		data.IsAuthenticated = true
 	}
 
-	h.render(w, "trip-detail.html", data)
+	h.render(w, "trip_detail.html", data)
 }
 
 // Explore Trips Page
