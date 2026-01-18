@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"html/template"
+	"html/template" //XSS saldırılarını önlemek için HTML'yi güvenli bir şekilde işler.
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,7 +17,8 @@ import (
 )
 
 type TemplateHandler struct {
-	templates   *template.Template
+	//Handlers call the template engine, passing templates and dynamic data.
+	templates   *template.Template //Parse edilmiş tüm HTML template’lerin bellekte tutulduğu yapı
 	userService services.UserService
 	tripService services.TripService
 }
