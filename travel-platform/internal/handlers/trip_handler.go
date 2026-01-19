@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"travel-platform/travel-platform/internal/middleware"
-	"travel-platform/travel-platform/internal/models"
-	"travel-platform/travel-platform/internal/services"
+	"travel-platform/internal/middleware"
+	"travel-platform/internal/models"
+	"travel-platform/internal/services"
 
 	"github.com/gorilla/mux"
 )

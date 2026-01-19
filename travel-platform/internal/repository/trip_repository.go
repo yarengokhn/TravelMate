@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"travel-platform/travel-platform/internal/models"
+	"travel-platform/internal/models"
 
 	"gorm.io/gorm"
 )

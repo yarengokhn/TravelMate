@@ -2,8 +2,8 @@ package services
 
 import (
 	"fmt"
-	"travel-platform/travel-platform/internal/models"
-	"travel-platform/travel-platform/internal/repository"
+	"travel-platform/internal/models"
+	"travel-platform/internal/repository"
 )
 
 type TripService interface {

@@ -6,8 +6,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"travel-platform/travel-platform/internal/middleware"
-	"travel-platform/travel-platform/internal/services"
+	"travel-platform/internal/middleware"
+	"travel-platform/internal/services"
 )
 
 type UserHandler interface {

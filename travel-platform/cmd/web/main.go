@@ -4,13 +4,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"travel-platform/travel-platform/internal/database"
-	"travel-platform/travel-platform/internal/handlers"
-	"travel-platform/travel-platform/internal/middleware"
-	"travel-platform/travel-platform/internal/repository"
-	"travel-platform/travel-platform/internal/services"
+	"travel-platform/internal/chat"
+	"travel-platform/internal/database"
+	"travel-platform/internal/handlers"
+	"travel-platform/internal/middleware"
+	"travel-platform/internal/repository"
+	"travel-platform/internal/services"
 
 	"github.com/gorilla/mux"
+)
+
+const (
+	HTTP_PORT = ":8080"
+	TCP_PORT  = ":9090"
 )
 
 func main() {
@@ -33,6 +39,7 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService)
 	tripHandler := handlers.NewTripHandler(tripService)
 	templateHandler := handlers.NewTemplateHandler(userService, tripService)
+	wsHandler := handlers.NewWebSocketHandler("localhost:9090") // TCP server adresi
 
 	// Router
 	r := mux.NewRouter()
@@ -43,6 +50,10 @@ func main() {
 	// Static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
 		http.FileServer(http.Dir("web/static"))))
+
+	r.HandleFunc("/chat",
+		middleware.AuthMiddleware(wsHandler.HandleChatPage)).Methods("GET")
+	r.HandleFunc("/ws/chat", wsHandler.HandleWebSocket)
 
 	// ========== WEB ROUTES (Template Pages) ==========
 	// Public pages
@@ -86,8 +97,21 @@ func main() {
 		middleware.AuthMiddleware(tripHandler.DeleteTrip)).Methods("DELETE")
 
 	// Sunucuyu başlat
-	fmt.Println("🚀 Server starting on http://localhost:8080")
-	fmt.Println("📁 Template directory: web/templates/")
-	fmt.Println("📁 Static files: web/static/")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	// ========== TCP CHAT SERVER ==========
+	chatServer := chat.NewServer(TCP_PORT)
+	go func() {
+		fmt.Printf("💬 TCP Chat Server starting on tcp://localhost%s\n", TCP_PORT)
+		if err := chatServer.Start(); err != nil {
+			log.Fatal("❌ TCP Chat server error:", err)
+		}
+	}()
+
+	// ========== START HTTP SERVER ==========
+	fmt.Println("╔═══════════════════════════════════════════╗")
+	fmt.Printf("🚀 HTTP Server: http://localhost%s\n", HTTP_PORT)
+	fmt.Printf("💬 TCP Chat:    tcp://localhost%s\n", TCP_PORT)
+	fmt.Printf("🌐 WebSocket:   ws://localhost%s/ws/chat\n", HTTP_PORT)
+	fmt.Println("╚═══════════════════════════════════════════╝")
+
+	log.Fatal(http.ListenAndServe(HTTP_PORT, r))
 }

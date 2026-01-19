@@ -2,7 +2,7 @@ package database
 
 import (
 	"log"
-	"travel-platform/travel-platform/internal/models"
+	"travel-platform/internal/models"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"

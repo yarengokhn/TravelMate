@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"travel-platform/travel-platform/internal/middleware"
-	"travel-platform/travel-platform/internal/services"
+	"travel-platform/internal/middleware"
+	"travel-platform/internal/services"
 
 	"log"
 	"os"
