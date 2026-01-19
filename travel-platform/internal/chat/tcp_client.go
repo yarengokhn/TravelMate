@@ -1,5 +1,6 @@
 package chat
 
+//Test sayfasi tcp icin
 import (
 	"bufio"
 	"fmt"

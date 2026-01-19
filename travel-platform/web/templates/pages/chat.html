@@ -1,456 +1,442 @@
 {{template "base" .}}
 
 {{define "content"}}
-<div class="chat-container">
-    <div class="chat-header">
-        <h1><i class="fas fa-comments"></i> TravelMate Chat</h1>
-        <p>Connect with travelers in real-time</p>
-    </div>
+<div class="chat-wrapper">
 
-    <div class="chat-layout">
-        <!-- Sol Panel - Bağlantı Formu -->
-        <div class="chat-sidebar" id="connectionPanel">
-            <div class="connection-form">
-                <h3><i class="fas fa-sign-in-alt"></i> Join Chat</h3>
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+            .chat-wrapper {
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .chat-container {
+                width: 100%;
+                max-width: 1200px;
+                height: 80vh;
+                margin: 0 auto;
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                display: flex;
+                overflow: hidden;
+            }
+
+            /* Sidebar */
+            .sidebar {
+                width: 300px;
+                background: #2c3e50;
+                color: white;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .sidebar h2 {
+                margin-bottom: 20px;
+                font-size: 24px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-size: 14px;
+                color: #ecf0f1;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 10px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 12px;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .btn-primary {
+                background: #3498db;
+                color: white;
+            }
+
+            .btn-primary:hover {
+                background: #2980b9;
+            }
+
+            .btn-danger {
+                background: #e74c3c;
+                color: white;
+                margin-top: 10px;
+            }
+
+            .status {
+                margin-top: 15px;
+                padding: 10px;
+                border-radius: 8px;
+                font-size: 14px;
+                display: none;
+            }
+
+            .status.success {
+                background: #27ae60;
+                color: white;
+            }
+
+            .status.error {
+                background: #e74c3c;
+                color: white;
+            }
+
+            /* Chat Area */
+            .chat-main {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .chat-header {
+                background: #34495e;
+                color: white;
+                padding: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .chat-header h1 {
+                font-size: 20px;
+            }
+
+            .online-count {
+                background: #27ae60;
+                padding: 5px 10px;
+                border-radius: 12px;
+                font-size: 14px;
+            }
+
+            .messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+                background: #ecf0f1;
+            }
+
+            .message {
+                margin-bottom: 15px;
+                animation: slideIn 0.3s ease;
+            }
+
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .message.system {
+                text-align: center;
+                color: #7f8c8d;
+                font-style: italic;
+                font-size: 14px;
+            }
+
+            .message.user {
+                background: white;
+                padding: 12px 15px;
+                border-radius: 12px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .message-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 5px;
+            }
+
+            .sender {
+                font-weight: bold;
+                color: #3498db;
+            }
+
+            .time {
+                font-size: 12px;
+                color: #95a5a6;
+            }
+
+            .message-text {
+                color: #2c3e50;
+            }
+
+            .input-area {
+                padding: 20px;
+                background: white;
+                border-top: 1px solid #ecf0f1;
+                display: flex;
+                gap: 10px;
+            }
+
+            .input-area input {
+                flex: 1;
+                padding: 12px;
+                border: 1px solid #bdc3c7;
+                border-radius: 25px;
+                font-size: 14px;
+            }
+
+            .input-area button {
+                padding: 12px 24px;
+                background: #3498db;
+                color: white;
+                border: none;
+                border-radius: 25px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .input-area button:hover {
+                background: #2980b9;
+            }
+
+            .input-area button:disabled {
+                background: #95a5a6;
+                cursor: not-allowed;
+            }
+
+            .waiting-screen {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                color: #7f8c8d;
+            }
+
+            .waiting-screen i {
+                font-size: 64px;
+                margin-bottom: 20px;
+                color: #3498db;
+            }
+
+            /* Scrollbar */
+            .messages::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .messages::-webkit-scrollbar-track {
+                background: #ecf0f1;
+            }
+
+            .messages::-webkit-scrollbar-thumb {
+                background: #95a5a6;
+                border-radius: 4px;
+            }
+        </style>
+        <div class="chat-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h2><i class="fas fa-comments"></i> TravelMate Chat</h2>
 
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Enter your name"
-                        value="{{if .User}}{{.User.FirstName}}{{end}}" required>
+                    <label>Kullanıcı Adı</label>
+                    <input type="text" id="username" value="{{if .User}}{{.User.FirstName}} {{.User.LastName}}{{end}}"
+                        readonly style="background: #34495e;">
                 </div>
+
+                <input type="hidden" id="userId" value="{{if .User}}{{.User.ID}}{{end}}">
 
                 <div class="form-group">
-                    <label for="userId">User ID</label>
-                    <input type="number" id="userId" placeholder="Your user ID" value="{{if .User}}{{.User.ID}}{{end}}"
-                        required>
+                    <label>Oda Adı</label>
+                    <input type="text" id="roomName" placeholder="Örn: Paris 2026">
                 </div>
 
-                <div class="form-group">
-                    <label for="roomName">Room Name</label>
-                    <input type="text" id="roomName" placeholder="e.g., Paris 2026" required>
-                    <small class="form-hint">Enter existing room or create new one</small>
-                </div>
-
-                <button id="connectBtn" class="btn btn-primary btn-block">
-                    <i class="fas fa-plug"></i> Connect to Chat
+                <button class="btn btn-primary" id="connectBtn">
+                    <i class="fas fa-plug"></i> Bağlan
                 </button>
 
-                <div id="connectionStatus" class="connection-status"></div>
+                <button class="btn btn-danger" id="disconnectBtn" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i> Ayrıl
+                </button>
+
+                <div class="status" id="status"></div>
             </div>
 
-            <div class="info-card">
-                <i class="fas fa-info-circle"></i>
-                <h4>Chat Tips</h4>
-                <ul>
-                    <li>Choose a unique username</li>
-                    <li>Join existing rooms or create new ones</li>
-                    <li>Type "STOP" to disconnect</li>
-                    <li>Be respectful to other travelers</li>
-                </ul>
+            <!-- Chat Area -->
+            <div class="chat-main">
+                <div id="waitingScreen" class="waiting-screen">
+                    <i class="fas fa-comments"></i>
+                    <h2>Sohbete Katıl</h2>
+                    <p>Bilgilerinizi girin ve bağlan!</p>
+                </div>
+
+                <div id="chatArea" style="display: none; flex: 1; display: flex; flex-direction: column;">
+                    <div class="chat-header">
+                        <h1 id="roomTitle">Chat Odası</h1>
+                        <span class="online-count">
+                            <i class="fas fa-circle"></i> Çevrimiçi
+                        </span>
+                    </div>
+
+                    <div class="messages" id="messages"></div>
+
+                    <div class="input-area">
+                        <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." disabled>
+                        <button id="sendBtn" disabled>
+                            <i class="fas fa-paper-plane"></i> Gönder
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Sağ Panel - Chat Alanı -->
-        <div class="chat-main">
-            <div id="chatArea" class="chat-area" style="display: none;">
-                <div class="chat-room-info">
-                    <h3 id="currentRoom"></h3>
-                    <button id="disconnectBtn" class="btn btn-small btn-danger">
-                        <i class="fas fa-sign-out-alt"></i> Disconnect
-                    </button>
-                </div>
+        <script>
+            let ws = null;
+            let connected = false;
 
-                <div id="messageContainer" class="message-container"></div>
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            const messageInput = document.getElementById('messageInput');
+            const messagesDiv = document.getElementById('messages');
+            const statusDiv = document.getElementById('status');
+            const waitingScreen = document.getElementById('waitingScreen');
+            const chatArea = document.getElementById('chatArea');
 
-                <div class="message-input-container">
-                    <input type="text" id="messageInput" placeholder="Type your message..." disabled>
-                    <button id="sendBtn" class="btn btn-primary" disabled>
-                        <i class="fas fa-paper-plane"></i> Send
-                    </button>
-                </div>
-            </div>
+            connectBtn.addEventListener('click', connect);
+            disconnectBtn.addEventListener('click', disconnect);
+            sendBtn.addEventListener('click', sendMessage);
 
-            <div id="waitingArea" class="waiting-area">
-                <i class="fas fa-comments"></i>
-                <h3>Ready to Chat?</h3>
-                <p>Enter your details and connect to start chatting with travelers</p>
-            </div>
-        </div>
-    </div>
-</div>
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
 
-<style>
-    .chat-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 20px;
-    }
+            function connect() {
+                const username = document.getElementById('username').value.trim();
+                const userId = document.getElementById('userId').value.trim();
+                const roomName = document.getElementById('roomName').value.trim();
 
-    .chat-header {
-        text-align: center;
-        margin-bottom: 30px;
-    }
+                if (!roomName) {
+                    showStatus('Lütfen oda adı girin!', 'error');
+                    return;
+                }
 
-    .chat-header h1 {
-        color: #2c3e50;
-        margin-bottom: 10px;
-    }
+                showStatus('Bağlanıyor...', 'success');
+                connectBtn.disabled = true;
 
-    .chat-layout {
-        display: grid;
-        grid-template-columns: 350px 1fr;
-        gap: 20px;
-        min-height: 600px;
-    }
+                ws = new WebSocket('ws://localhost:8080/ws/chat');
 
-    .chat-sidebar {
-        background: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+                ws.onopen = () => {
+                    setTimeout(() => ws.send(username), 100);
+                    setTimeout(() => ws.send(userId), 200);
+                    setTimeout(() => ws.send(roomName), 300);
 
-    .connection-form h3 {
-        margin-bottom: 20px;
-        color: #2c3e50;
-    }
+                    connected = true;
+                    showStatus('Bağlandı!', 'success');
+                    showChatArea(roomName);
+                };
 
-    .connection-status {
-        margin-top: 15px;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        display: none;
-    }
+                ws.onmessage = (event) => {
+                    displayMessage(event.data);
+                };
 
-    .connection-status.success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-        display: block;
-    }
+                ws.onerror = () => {
+                    showStatus('Bağlantı hatası!', 'error');
+                    connectBtn.disabled = false;
+                };
 
-    .connection-status.error {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        display: block;
-    }
-
-    .chat-main {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .chat-area {
-        display: flex;
-        flex-direction: column;
-        height: 600px;
-    }
-
-    .chat-room-info {
-        padding: 15px 20px;
-        border-bottom: 2px solid #e9ecef;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #f8f9fa;
-        border-radius: 10px 10px 0 0;
-    }
-
-    .chat-room-info h3 {
-        margin: 0;
-        color: #2c3e50;
-    }
-
-    .message-container {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        background: #f8f9fa;
-    }
-
-    .message {
-        margin-bottom: 15px;
-        animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .message.system {
-        text-align: center;
-        color: #6c757d;
-        font-style: italic;
-        font-size: 14px;
-    }
-
-    .message.user {
-        background: white;
-        padding: 12px 15px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .message-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-    }
-
-    .message-sender {
-        font-weight: 600;
-        color: #007bff;
-    }
-
-    .message-time {
-        font-size: 12px;
-        color: #6c757d;
-    }
-
-    .message-text {
-        color: #2c3e50;
-        line-height: 1.5;
-    }
-
-    .message-input-container {
-        display: flex;
-        gap: 10px;
-        padding: 15px 20px;
-        border-top: 2px solid #e9ecef;
-        background: white;
-        border-radius: 0 0 10px 10px;
-    }
-
-    #messageInput {
-        flex: 1;
-        padding: 12px 15px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-        font-size: 14px;
-    }
-
-    #messageInput:focus {
-        outline: none;
-        border-color: #007bff;
-    }
-
-    .waiting-area {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 600px;
-        color: #6c757d;
-    }
-
-    .waiting-area i {
-        font-size: 64px;
-        margin-bottom: 20px;
-        color: #007bff;
-    }
-
-    .info-card {
-        margin-top: 20px;
-        padding: 15px;
-        background: #e7f3ff;
-        border-radius: 8px;
-        border-left: 4px solid #007bff;
-    }
-
-    .info-card h4 {
-        margin-bottom: 10px;
-        color: #2c3e50;
-    }
-
-    .info-card ul {
-        margin: 0;
-        padding-left: 20px;
-        color: #495057;
-    }
-
-    .info-card ul li {
-        margin-bottom: 5px;
-        font-size: 14px;
-    }
-
-    @media (max-width: 768px) {
-        .chat-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .chat-sidebar {
-            order: 2;
-        }
-    }
-</style>
-
-<script>
-    let ws = null;
-    let connected = false;
-    let currentUsername = '';
-    let currentRoom = '';
-
-    const connectBtn = document.getElementById('connectBtn');
-    const disconnectBtn = document.getElementById('disconnectBtn');
-    const sendBtn = document.getElementById('sendBtn');
-    const messageInput = document.getElementById('messageInput');
-    const messageContainer = document.getElementById('messageContainer');
-    const connectionStatus = document.getElementById('connectionStatus');
-    const chatArea = document.getElementById('chatArea');
-    const waitingArea = document.getElementById('waitingArea');
-
-    // Connect butonuna tıklama
-    connectBtn.addEventListener('click', connectToChat);
-
-    // Disconnect butonuna tıklama
-    disconnectBtn.addEventListener('click', disconnect);
-
-    // Send butonuna tıklama
-    sendBtn.addEventListener('click', sendMessage);
-
-    // Enter tuşu ile mesaj gönder
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    function connectToChat() {
-        const username = document.getElementById('username').value.trim();
-        const userId = document.getElementById('userId').value.trim();
-        const roomName = document.getElementById('roomName').value.trim();
-
-        if (!username || !userId || !roomName) {
-            showStatus('Please fill all fields', 'error');
-            return;
-        }
-
-        showStatus('Connecting...', 'success');
-        connectBtn.disabled = true;
-
-        // WebSocket bağlantısı
-        ws = new WebSocket('ws://localhost:8080/ws/chat');
-
-        ws.onopen = () => {
-            console.log('WebSocket connected');
-
-            // Kullanıcı bilgilerini gönder
-            setTimeout(() => ws.send(username), 100);
-            setTimeout(() => ws.send(userId), 200);
-            setTimeout(() => ws.send(roomName), 300);
-
-            currentUsername = username;
-            currentRoom = roomName;
-            connected = true;
-
-            showStatus('Connected!', 'success');
-            showChatArea();
-        };
-
-        ws.onmessage = (event) => {
-            displayMessage(event.data);
-        };
-
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            showStatus('Connection error!', 'error');
-            connectBtn.disabled = false;
-        };
-
-        ws.onclose = () => {
-            console.log('WebSocket disconnected');
-            connected = false;
-            showStatus('Disconnected', 'error');
-            connectBtn.disabled = false;
-            hideChatArea();
-        };
-    }
-
-    function disconnect() {
-        if (ws && connected) {
-            ws.send('STOP');
-            ws.close();
-        }
-    }
-
-    function sendMessage() {
-        const message = messageInput.value.trim();
-
-        if (!message || !connected) {
-            return;
-        }
-
-        ws.send(message);
-        messageInput.value = '';
-        messageInput.focus();
-    }
-
-    function displayMessage(text) {
-        const messageDiv = document.createElement('div');
-
-        // Sistem mesajı kontrolü
-        if (text.includes('***') || text.includes('Welcome to') || text.includes('joined') || text.includes('left')) {
-            messageDiv.className = 'message system';
-            messageDiv.textContent = text;
-        } else {
-            // Normal mesaj formatı: [15:04:05] Username: Message
-            const match = text.match(/\[(\d{2}:\d{2}:\d{2})\]\s*([^:]+):\s*(.+)/);
-
-            if (match) {
-                const [, time, sender, message] = match;
-                messageDiv.className = 'message user';
-                messageDiv.innerHTML = `
-                <div class="message-header">
-                    <span class="message-sender">${sender}</span>
-                    <span class="message-time">${time}</span>
-                </div>
-                <div class="message-text">${message}</div>
-            `;
-            } else {
-                // Format eşleşmezse düz metin olarak göster
-                messageDiv.className = 'message system';
-                messageDiv.textContent = text;
+                ws.onclose = () => {
+                    connected = false;
+                    showStatus('Bağlantı kesildi', 'error');
+                    hideChatArea();
+                };
             }
-        }
 
-        messageContainer.appendChild(messageDiv);
-        messageContainer.scrollTop = messageContainer.scrollHeight;
-    }
+            function disconnect() {
+                if (ws && connected) {
+                    ws.send('STOP');
+                    ws.close();
+                }
+            }
 
-    function showStatus(message, type) {
-        connectionStatus.textContent = message;
-        connectionStatus.className = `connection-status ${type}`;
-    }
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message || !connected) return;
 
-    function showChatArea() {
-        waitingArea.style.display = 'none';
-        chatArea.style.display = 'flex';
-        document.getElementById('currentRoom').textContent = `Room: ${currentRoom}`;
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
-        messageInput.focus();
-    }
+                ws.send(message);
+                messageInput.value = '';
+            }
 
-    function hideChatArea() {
-        chatArea.style.display = 'none';
-        waitingArea.style.display = 'flex';
-        messageInput.disabled = true;
-        sendBtn.disabled = true;
-        messageContainer.innerHTML = '';
-    }
-</script>
+            function displayMessage(text) {
+                const div = document.createElement('div');
+
+                if (text.includes('***') || text.includes('Welcome') || text.includes('joined') || text.includes('left')) {
+                    div.className = 'message system';
+                    div.textContent = text;
+                } else {
+                    const match = text.match(/\[(\d{2}:\d{2}:\d{2})\]\s*([^:]+):\s*(.+)/);
+                    if (match) {
+                        const [, time, sender, message] = match;
+                        div.className = 'message user';
+                        div.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${sender}</span>
+                            <span class="time">${time}</span>
+                        </div>
+                        <div class="message-text">${message}</div>
+                    `;
+                    } else {
+                        div.className = 'message system';
+                        div.textContent = text;
+                    }
+                }
+
+                messagesDiv.appendChild(div);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+
+            function showStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = `status ${type}`;
+                statusDiv.style.display = 'block';
+            }
+
+            function showChatArea(roomName) {
+                waitingScreen.style.display = 'none';
+                chatArea.style.display = 'flex';
+                document.getElementById('roomTitle').textContent = roomName;
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                connectBtn.style.display = 'none';
+                disconnectBtn.style.display = 'block';
+            }
+
+            function hideChatArea() {
+                chatArea.style.display = 'none';
+                waitingScreen.style.display = 'flex';
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                messagesDiv.innerHTML = '';
+                connectBtn.style.display = 'block';
+                disconnectBtn.style.display = 'none';
+                connectBtn.disabled = false;
+            }
+        </script>
+</div>
 {{end}}

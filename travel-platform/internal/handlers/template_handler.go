@@ -265,9 +265,11 @@ func (h *TemplateHandler) ExplorePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userID, ok := middleware.GetUserIDFromContext(r); ok {
-		user, _ := h.userService.GetProfile(userID)
-		data.User = user
-		data.IsAuthenticated = true
+		user, err := h.userService.GetProfile(userID)
+		if err == nil {
+			data.User = user
+			data.IsAuthenticated = true
+		}
 	}
 
 	h.render(w, "explore.html", data)

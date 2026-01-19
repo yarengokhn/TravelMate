@@ -39,7 +39,7 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService)
 	tripHandler := handlers.NewTripHandler(tripService)
 	templateHandler := handlers.NewTemplateHandler(userService, tripService)
-	wsHandler := handlers.NewWebSocketHandler("localhost:9090") // TCP server adresi
+	wsHandler := handlers.NewWebSocketHandler("localhost:9090", userService)
 
 	// Router
 	r := mux.NewRouter()
@@ -57,10 +57,11 @@ func main() {
 
 	// ========== WEB ROUTES (Template Pages) ==========
 	// Public pages
-	r.HandleFunc("/", templateHandler.Home).Methods("GET")
+	// Public pages (Optional Auth ekledik ki navbar user'ı tanısın)
+	r.HandleFunc("/", middleware.OptionalAuthMiddleware(templateHandler.Home)).Methods("GET")
 	r.HandleFunc("/login", templateHandler.LoginPage).Methods("GET")
 	r.HandleFunc("/register", templateHandler.RegisterPage).Methods("GET")
-	r.HandleFunc("/explore", templateHandler.ExplorePage).Methods("GET")
+	r.HandleFunc("/explore", middleware.OptionalAuthMiddleware(templateHandler.ExplorePage)).Methods("GET")
 
 	// Protected pages (require authentication)
 	r.HandleFunc("/dashboard",
@@ -68,7 +69,7 @@ func main() {
 	r.HandleFunc("/trips/new",
 		middleware.AuthMiddleware(templateHandler.CreateTripPage)).Methods("GET")
 	r.HandleFunc("/trips/{id}",
-		templateHandler.TripDetailPage).Methods("GET")
+		middleware.OptionalAuthMiddleware(templateHandler.TripDetailPage)).Methods("GET")
 
 	// ========== API ROUTES (JSON) ==========
 	api := r.PathPrefix("/api").Subrouter()

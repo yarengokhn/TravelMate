@@ -112,14 +112,18 @@ img {
     box-shadow: 0 4px 12px var(--shadow);
     border-radius: var(--radius);
     min-width: 200px;
-    display: none;
     list-style: none;
-    margin-top: 0.5rem;
     padding: 0.5rem 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.2s ease;
 }
 
 .nav-dropdown:hover .dropdown-menu {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .dropdown-menu a,

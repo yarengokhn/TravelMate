@@ -64,8 +64,9 @@
         {{range .Data}}
         <div class="trip-card" data-destination="{{.Destination | lower}}" data-budget="{{.Budget}}"
             data-start-date="{{.StartDate.Format " 2006-01-02"}}" data-month="{{.StartDate.Month}}">
+
             <div class="trip-card-image">
-                <img src="/static/img/placeholder-trip.jpg" alt="{{.Destination}}">
+                <img src="/static/img/florence.jpg" alt="{{.Destination}}">
                 <div class="trip-card-overlay">
                     <span class="trip-duration">
                         <i class="far fa-calendar"></i>
@@ -103,7 +104,7 @@
                     {{if .Budget}}
                     <span class="trip-budget">
                         <i class="fas fa-euro-sign"></i>
-                        €{{printf "%.0f" .Budget}}
+                        {{printf "%.0f" .Budget}}
                     </span>
                     {{end}}
                 </div>

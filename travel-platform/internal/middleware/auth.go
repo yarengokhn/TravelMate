@@ -100,5 +100,23 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 func GetUserIDFromContext(r *http.Request) (uint, bool) {
 	userID, ok := r.Context().Value("user_id").(uint)
+
 	return userID, ok
+}
+
+func OptionalAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Cookie kontrolü yap, yoksa hata verme, sadece devam et
+		cookie, err := r.Cookie("session_id")
+		if err == nil {
+			// Session geçerli mi?
+			if session, exists := GetSession(cookie.Value); exists {
+				// Context'e user_id ekle
+				ctx := context.WithValue(r.Context(), "user_id", session.UserID)
+				r = r.WithContext(ctx)
+			}
+		}
+		// Her durumda sayfayı göster (Login olmasa bile)
+		next.ServeHTTP(w, r)
+	}
 }

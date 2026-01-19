@@ -1,4 +1,4 @@
-// cmd/chatclient/main.go
+// test icin
 package main
 
 import (
