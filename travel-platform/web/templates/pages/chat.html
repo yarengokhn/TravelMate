@@ -2,441 +2,590 @@
 
 {{define "content"}}
 <div class="chat-wrapper">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .chat-wrapper {
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <style>
-            .chat-wrapper {
-                min-height: 100vh;
-                padding: 20px;
+        .chat-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #ecf0f1;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status.error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Chat Area */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #e5ddd5;
+            /* WhatsApp background */
+            position: relative;
+        }
+
+        #chatArea {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-header {
+            background: #075e54;
+            /* WhatsApp header green */
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header h1 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .online-count {
+            background: #25d366;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23e5ddd5" width="100" height="100"/><circle fill="%23d4ccc4" cx="10" cy="10" r="1" opacity="0.3"/></svg>');
+            scroll-behavior: smooth;
+        }
+
+        /* WhatsApp style message bubbles */
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
             }
 
-            .chat-container {
-                width: 100%;
-                max-width: 1200px;
-                height: 80vh;
-                margin: 0 auto;
-                background: white;
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-                display: flex;
-                overflow: hidden;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
+        }
 
-            /* Sidebar */
-            .sidebar {
-                width: 300px;
-                background: #2c3e50;
-                color: white;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-            }
+        /* System messages */
+        .message.system {
+            justify-content: center;
+        }
 
-            .sidebar h2 {
-                margin-bottom: 20px;
-                font-size: 24px;
-            }
+        .message.system .bubble {
+            background: #dcf8c6;
+            color: #303030;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            max-width: 70%;
+            text-align: center;
+        }
 
-            .form-group {
-                margin-bottom: 15px;
-            }
+        /* Other users' messages (left) */
+        .message.other {
+            justify-content: flex-start;
+        }
 
-            .form-group label {
-                display: block;
-                margin-bottom: 5px;
-                font-size: 14px;
-                color: #ecf0f1;
-            }
+        .message.other .bubble {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            max-width: 65%;
+            position: relative;
+        }
 
-            .form-group input {
-                width: 100%;
-                padding: 10px;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-            }
+        /* Own messages (right) */
+        .message.own {
+            justify-content: flex-end;
+        }
 
-            .btn {
-                width: 100%;
-                padding: 12px;
-                border: none;
-                border-radius: 8px;
-                font-size: 16px;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
+        .message.own .bubble {
+            background: #dcf8c6;
+            /* WhatsApp green */
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            max-width: 65%;
+        }
 
-            .btn-primary {
-                background: #3498db;
-                color: white;
-            }
+        .message-sender {
+            font-weight: 600;
+            color: #075e54;
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
 
-            .btn-primary:hover {
-                background: #2980b9;
-            }
+        .message-text {
+            color: #303030;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
 
-            .btn-danger {
-                background: #e74c3c;
-                color: white;
-                margin-top: 10px;
-            }
+        .message-time {
+            font-size: 11px;
+            color: #667781;
+            text-align: right;
+            margin-top: 4px;
+        }
 
-            .status {
-                margin-top: 15px;
-                padding: 10px;
-                border-radius: 8px;
-                font-size: 14px;
-                display: none;
-            }
+        /* Input Area */
+        .input-area {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0;
+            /* Input alanı küçülmesin */
+        }
 
-            .status.success {
-                background: #27ae60;
-                color: white;
-            }
+        .input-area input {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            background: white;
+        }
 
-            .status.error {
-                background: #e74c3c;
-                color: white;
-            }
+        .input-area input:focus {
+            outline: none;
+        }
 
-            /* Chat Area */
-            .chat-main {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-            }
+        .input-area button {
+            padding: 12px 20px;
+            background: #075e54;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-            .chat-header {
-                background: #34495e;
-                color: white;
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
+        .input-area button:hover:not(:disabled) {
+            background: #064e47;
+        }
 
-            .chat-header h1 {
-                font-size: 20px;
-            }
+        .input-area button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
 
-            .online-count {
-                background: #27ae60;
-                padding: 5px 10px;
-                border-radius: 12px;
-                font-size: 14px;
-            }
+        .waiting-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #7f8c8d;
+            background: white;
+        }
 
-            .messages {
-                flex: 1;
-                overflow-y: auto;
-                padding: 20px;
-                background: #ecf0f1;
-            }
+        .waiting-screen i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #075e54;
+        }
 
-            .message {
-                margin-bottom: 15px;
-                animation: slideIn 0.3s ease;
-            }
+        /* Scrollbar */
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
 
-            @keyframes slideIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(10px);
-                }
+        .messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
+        .messages::-webkit-scrollbar-thumb {
+            background: #b3b3b3;
+            border-radius: 3px;
+        }
+    </style>
 
-            .message.system {
-                text-align: center;
-                color: #7f8c8d;
-                font-style: italic;
-                font-size: 14px;
-            }
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2><i class="fas fa-comments"></i> TravelMate Chat</h2>
 
-            .message.user {
-                background: white;
-                padding: 12px 15px;
-                border-radius: 12px;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            }
-
-            .message-header {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 5px;
-            }
-
-            .sender {
-                font-weight: bold;
-                color: #3498db;
-            }
-
-            .time {
-                font-size: 12px;
-                color: #95a5a6;
-            }
-
-            .message-text {
-                color: #2c3e50;
-            }
-
-            .input-area {
-                padding: 20px;
-                background: white;
-                border-top: 1px solid #ecf0f1;
-                display: flex;
-                gap: 10px;
-            }
-
-            .input-area input {
-                flex: 1;
-                padding: 12px;
-                border: 1px solid #bdc3c7;
-                border-radius: 25px;
-                font-size: 14px;
-            }
-
-            .input-area button {
-                padding: 12px 24px;
-                background: #3498db;
-                color: white;
-                border: none;
-                border-radius: 25px;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-
-            .input-area button:hover {
-                background: #2980b9;
-            }
-
-            .input-area button:disabled {
-                background: #95a5a6;
-                cursor: not-allowed;
-            }
-
-            .waiting-screen {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                color: #7f8c8d;
-            }
-
-            .waiting-screen i {
-                font-size: 64px;
-                margin-bottom: 20px;
-                color: #3498db;
-            }
-
-            /* Scrollbar */
-            .messages::-webkit-scrollbar {
-                width: 8px;
-            }
-
-            .messages::-webkit-scrollbar-track {
-                background: #ecf0f1;
-            }
-
-            .messages::-webkit-scrollbar-thumb {
-                background: #95a5a6;
-                border-radius: 4px;
-            }
-        </style>
-        <div class="chat-container">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <h2><i class="fas fa-comments"></i> TravelMate Chat</h2>
-
-                <div class="form-group">
-                    <label>Kullanıcı Adı</label>
-                    <input type="text" id="username" value="{{if .User}}{{.User.FirstName}} {{.User.LastName}}{{end}}"
-                        readonly style="background: #34495e;">
-                </div>
-
-                <input type="hidden" id="userId" value="{{if .User}}{{.User.ID}}{{end}}">
-
-                <div class="form-group">
-                    <label>Oda Adı</label>
-                    <input type="text" id="roomName" placeholder="Örn: Paris 2026">
-                </div>
-
-                <button class="btn btn-primary" id="connectBtn">
-                    <i class="fas fa-plug"></i> Bağlan
-                </button>
-
-                <button class="btn btn-danger" id="disconnectBtn" style="display: none;">
-                    <i class="fas fa-sign-out-alt"></i> Ayrıl
-                </button>
-
-                <div class="status" id="status"></div>
+            <div class="form-group">
+                <label>User Name</label>
+                <input type="text" id="username" value="{{if .User}}{{.User.FirstName}} {{.User.LastName}}{{end}}"
+                    readonly style="background: #34495e; color: white;">
             </div>
 
-            <!-- Chat Area -->
-            <div class="chat-main">
-                <div id="waitingScreen" class="waiting-screen">
-                    <i class="fas fa-comments"></i>
-                    <h2>Sohbete Katıl</h2>
-                    <p>Bilgilerinizi girin ve bağlan!</p>
+            <input type="hidden" id="userId" value="{{if .User}}{{.User.ID}}{{end}}">
+            <input type="hidden" id="currentUsername" value="{{if .User}}{{.User.FirstName}} {{.User.LastName}}{{end}}">
+
+            <div class="form-group">
+                <label>Room Name</label>
+                <input type="text" id="roomName" placeholder="e.g: Paris 2026">
+            </div>
+
+            <button class="btn btn-primary" id="connectBtn">
+                <i class="fas fa-plug"></i> Connect
+            </button>
+
+            <button class="btn btn-danger" id="disconnectBtn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> Disconnect
+            </button>
+
+            <div class="status" id="status"></div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-main">
+            <div id="waitingScreen" class="waiting-screen">
+                <i class="fas fa-comments"></i>
+                <h2>Join the chat</h2>
+                <p>Enter a room name and connect!</p>
+            </div>
+
+            <div id="chatArea" style="display: none;">
+                <div class="chat-header">
+                    <h1 id="roomTitle">Chat Room</h1>
+                    <span class="online-count">
+                        <i class="fas fa-circle"></i> Online
+                    </span>
                 </div>
 
-                <div id="chatArea" style="display: none; flex: 1; display: flex; flex-direction: column;">
-                    <div class="chat-header">
-                        <h1 id="roomTitle">Chat Odası</h1>
-                        <span class="online-count">
-                            <i class="fas fa-circle"></i> Çevrimiçi
-                        </span>
-                    </div>
+                <div class="messages" id="messages"></div>
 
-                    <div class="messages" id="messages"></div>
-
-                    <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." disabled>
-                        <button id="sendBtn" disabled>
-                            <i class="fas fa-paper-plane"></i> Gönder
-                        </button>
-                    </div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="Type your message..." disabled>
+                    <button id="sendBtn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>
-            let ws = null;
-            let connected = false;
+    <script>
+        let ws = null;
+        let connected = false;
+        let currentUsername = '';
 
-            const connectBtn = document.getElementById('connectBtn');
-            const disconnectBtn = document.getElementById('disconnectBtn');
-            const sendBtn = document.getElementById('sendBtn');
-            const messageInput = document.getElementById('messageInput');
-            const messagesDiv = document.getElementById('messages');
-            const statusDiv = document.getElementById('status');
-            const waitingScreen = document.getElementById('waitingScreen');
-            const chatArea = document.getElementById('chatArea');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const messageInput = document.getElementById('messageInput');
+        const messagesDiv = document.getElementById('messages');
+        const statusDiv = document.getElementById('status');
+        const waitingScreen = document.getElementById('waitingScreen');
+        const chatArea = document.getElementById('chatArea');
 
-            connectBtn.addEventListener('click', connect);
-            disconnectBtn.addEventListener('click', disconnect);
-            sendBtn.addEventListener('click', sendMessage);
+        // Kullanıcı adını al
+        currentUsername = document.getElementById('currentUsername').value.trim();
 
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendMessage();
-            });
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+        sendBtn.addEventListener('click', sendMessage);
 
-            function connect() {
-                const username = document.getElementById('username').value.trim();
-                const userId = document.getElementById('userId').value.trim();
-                const roomName = document.getElementById('roomName').value.trim();
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
 
-                if (!roomName) {
-                    showStatus('Lütfen oda adı girin!', 'error');
+        function connect() {
+            const username = document.getElementById('username').value.trim();
+            const userId = document.getElementById('userId').value.trim();
+            const roomName = document.getElementById('roomName').value.trim();
+
+            if (!roomName) {
+                showStatus('Please enter a room name!', 'error');
+                return;
+            }
+
+            showStatus('Connecting...', 'success');
+            connectBtn.disabled = true;
+
+            ws = new WebSocket('ws://localhost:8080/ws/chat');
+
+            ws.onopen = () => {
+                setTimeout(() => ws.send(username), 100);
+                setTimeout(() => ws.send(userId), 200);
+                setTimeout(() => ws.send(roomName), 300);
+
+                connected = true;
+                showStatus('Connected!', 'success');
+                showChatArea(roomName);
+            };
+
+            ws.onmessage = (event) => {
+                displayMessage(event.data);
+            };
+
+            ws.onerror = () => {
+                showStatus('Connection error!', 'error');
+                connectBtn.disabled = false;
+            };
+
+            ws.onclose = () => {
+                connected = false;
+                showStatus('Connection closed!', 'error');
+                hideChatArea();
+            };
+        }
+
+        function disconnect() {
+            if (ws && connected) {
+                ws.send('STOP');
+                ws.close();
+            }
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !connected) return;
+
+            // Mesajı anında ekranda göster (kendi mesajımız olarak)
+            displayOwnMessage(message);
+
+            // Sunucuya gönder
+            ws.send(message);
+            messageInput.value = '';
+        }
+
+        // Kendi gönderdiğimiz mesajı göster
+        function displayOwnMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message own';
+
+            const now = new Date();
+            const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            messageDiv.innerHTML = `
+                <div class="bubble">
+                    <div class="message-text">${text}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+
+            // Scroll'u en alta getir
+            setTimeout(() => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 50);
+        }
+
+        function displayMessage(text) {
+            // TCP server'dan gelen gereksiz mesajları filtrele
+            const ignoredMessages = [
+                'Welcome to TravelMate Chat',
+                'Enter your username',
+                'Enter your User ID',
+                'Available Chat Rooms',
+                '───────────────',
+                '(No rooms yet)',
+                'Enter room name',
+                'Created new room',
+                'Joined room',
+                'Type your messages',
+                'Message sent'
+            ];
+
+            // Görmezden gelinecek mesajları atla
+            for (const ignored of ignoredMessages) {
+                if (text.includes(ignored)) {
+                    return; // Mesajı gösterme
+                }
+            }
+
+            const messageDiv = document.createElement('div');
+
+            // Sistem mesajları
+            if (text.includes('***') || text.includes('joined the room') || text.includes('left the room')) {
+                messageDiv.className = 'message system';
+
+                // Hoş geldin mesajını düzelt
+                let systemText = text.replace(/\*\*\*/g, '').trim();
+                if (systemText.includes('joined the room')) {
+                    const name = systemText.split(' joined')[0].trim();
+                    systemText = `${name} joined the room 👋`;
+                } else if (systemText.includes('left the room')) {
+                    const name = systemText.split(' left')[0].trim();
+                    systemText = `${name} left the room 👋`;
+                }
+
+                messageDiv.innerHTML = `<div class="bubble">${systemText}</div>`;
+            }
+            // Normal mesajlar
+            else {
+                const match = text.match(/\[(\d{2}:\d{2}:\d{2})\]\s*([^:]+):\s*(.+)/);
+                if (match) {
+                    const [, time, sender, message] = match;
+
+                    // Kendi mesajımızı tekrar gösterme (zaten gösterdik)
+                    const isOwnMessage = sender.trim() === currentUsername;
+                    if (isOwnMessage) {
+                        return; // Kendi mesajımızı sunucudan tekrar almayalım
+                    }
+
+                    // Başkasının mesajı
+                    messageDiv.className = 'message other';
+
+                    let bubbleHTML = '<div class="bubble">';
+                    bubbleHTML += `<div class="message-sender">${sender}</div>`;
+                    bubbleHTML += `
+                        <div class="message-text">${message}</div>
+                        <div class="message-time">${time}</div>
+                    `;
+                    bubbleHTML += '</div>';
+
+                    messageDiv.innerHTML = bubbleHTML;
+                } else {
+                    // Format eşleşmezse atla
                     return;
                 }
-
-                showStatus('Bağlanıyor...', 'success');
-                connectBtn.disabled = true;
-
-                ws = new WebSocket('ws://localhost:8080/ws/chat');
-
-                ws.onopen = () => {
-                    setTimeout(() => ws.send(username), 100);
-                    setTimeout(() => ws.send(userId), 200);
-                    setTimeout(() => ws.send(roomName), 300);
-
-                    connected = true;
-                    showStatus('Bağlandı!', 'success');
-                    showChatArea(roomName);
-                };
-
-                ws.onmessage = (event) => {
-                    displayMessage(event.data);
-                };
-
-                ws.onerror = () => {
-                    showStatus('Bağlantı hatası!', 'error');
-                    connectBtn.disabled = false;
-                };
-
-                ws.onclose = () => {
-                    connected = false;
-                    showStatus('Bağlantı kesildi', 'error');
-                    hideChatArea();
-                };
             }
 
-            function disconnect() {
-                if (ws && connected) {
-                    ws.send('STOP');
-                    ws.close();
-                }
-            }
+            messagesDiv.appendChild(messageDiv);
 
-            function sendMessage() {
-                const message = messageInput.value.trim();
-                if (!message || !connected) return;
-
-                ws.send(message);
-                messageInput.value = '';
-            }
-
-            function displayMessage(text) {
-                const div = document.createElement('div');
-
-                if (text.includes('***') || text.includes('Welcome') || text.includes('joined') || text.includes('left')) {
-                    div.className = 'message system';
-                    div.textContent = text;
-                } else {
-                    const match = text.match(/\[(\d{2}:\d{2}:\d{2})\]\s*([^:]+):\s*(.+)/);
-                    if (match) {
-                        const [, time, sender, message] = match;
-                        div.className = 'message user';
-                        div.innerHTML = `
-                        <div class="message-header">
-                            <span class="sender">${sender}</span>
-                            <span class="time">${time}</span>
-                        </div>
-                        <div class="message-text">${message}</div>
-                    `;
-                    } else {
-                        div.className = 'message system';
-                        div.textContent = text;
-                    }
-                }
-
-                messagesDiv.appendChild(div);
+            // Scroll'u en alta getir (smooth scroll)
+            setTimeout(() => {
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
+            }, 50);
+        }
 
-            function showStatus(message, type) {
-                statusDiv.textContent = message;
-                statusDiv.className = `status ${type}`;
-                statusDiv.style.display = 'block';
-            }
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
 
-            function showChatArea(roomName) {
-                waitingScreen.style.display = 'none';
-                chatArea.style.display = 'flex';
-                document.getElementById('roomTitle').textContent = roomName;
-                messageInput.disabled = false;
-                sendBtn.disabled = false;
-                connectBtn.style.display = 'none';
-                disconnectBtn.style.display = 'block';
-            }
+        function showChatArea(roomName) {
+            waitingScreen.style.display = 'none';
+            chatArea.style.display = 'flex';
+            document.getElementById('roomTitle').textContent = roomName;
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            connectBtn.style.display = 'none';
+            disconnectBtn.style.display = 'block';
 
-            function hideChatArea() {
-                chatArea.style.display = 'none';
-                waitingScreen.style.display = 'flex';
-                messageInput.disabled = true;
-                sendBtn.disabled = true;
-                messagesDiv.innerHTML = '';
-                connectBtn.style.display = 'block';
-                disconnectBtn.style.display = 'none';
-                connectBtn.disabled = false;
-            }
-        </script>
+            // Input'a focus ver
+            setTimeout(() => {
+                messageInput.focus();
+            }, 100);
+        }
+
+        function hideChatArea() {
+            chatArea.style.display = 'none';
+            waitingScreen.style.display = 'flex';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            messagesDiv.innerHTML = '';
+            connectBtn.style.display = 'block';
+            disconnectBtn.style.display = 'none';
+            connectBtn.disabled = false;
+        }
+    </script>
 </div>
 {{end}}

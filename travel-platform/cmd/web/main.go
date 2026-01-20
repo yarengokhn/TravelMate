@@ -52,7 +52,7 @@ func main() {
 		http.FileServer(http.Dir("web/static"))))
 
 	r.HandleFunc("/chat",
-		middleware.AuthMiddleware(wsHandler.HandleChatPage)).Methods("GET")
+		middleware.AuthMiddleware(templateHandler.ChatPage)).Methods("GET")
 	r.HandleFunc("/ws/chat", wsHandler.HandleWebSocket)
 
 	// ========== WEB ROUTES (Template Pages) ==========
@@ -60,6 +60,7 @@ func main() {
 	// Public pages (Optional Auth ekledik ki navbar user'ı tanısın)
 	r.HandleFunc("/", middleware.OptionalAuthMiddleware(templateHandler.Home)).Methods("GET")
 	r.HandleFunc("/login", templateHandler.LoginPage).Methods("GET")
+	r.HandleFunc("/logout", templateHandler.Logout).Methods("POST")
 	r.HandleFunc("/register", templateHandler.RegisterPage).Methods("GET")
 	r.HandleFunc("/explore", middleware.OptionalAuthMiddleware(templateHandler.ExplorePage)).Methods("GET")
 

@@ -274,3 +274,46 @@ func (h *TemplateHandler) ExplorePage(w http.ResponseWriter, r *http.Request) {
 
 	h.render(w, "explore.html", data)
 }
+
+// Chat Page
+func (h *TemplateHandler) ChatPage(w http.ResponseWriter, r *http.Request) {
+	// Auth middleware should have handled this, but good to check
+	userID, ok := middleware.GetUserIDFromContext(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	user, err := h.userService.GetProfile(userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	data := &TemplateData{
+		Title:           "Chat - TravelMate",
+		User:            user,
+		IsAuthenticated: true,
+	}
+
+	h.render(w, "chat.html", data)
+}
+
+// Logout
+func (h *TemplateHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_id")
+	if err == nil {
+		middleware.DeleteSession(cookie.Value)
+	}
+
+	// Clear cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
