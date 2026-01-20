@@ -3,13 +3,17 @@ package handlers
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+	"travel-platform/internal/database"
 	"travel-platform/internal/middleware"
+	"travel-platform/internal/models"
 	"travel-platform/internal/services"
 
 	"github.com/gorilla/websocket"
@@ -35,23 +39,19 @@ func NewWebSocketHandler(tcpAddress string, userService services.UserService) *W
 	}
 }
 
-// TemplateData - Chat sayfası için data
 type ChatTemplateData struct {
 	Title           string
 	User            interface{}
 	IsAuthenticated bool
 }
 
-// HandleChatPage - Chat sayfasını render et (USER BİLGİSİYLE)
 func (h *WebSocketHandler) HandleChatPage(w http.ResponseWriter, r *http.Request) {
-	// User ID'yi context'ten al
 	userID, ok := middleware.GetUserIDFromContext(r)
 	if !ok {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	// User bilgisini al
 	user, err := h.userService.GetProfile(userID)
 	if err != nil {
 		log.Printf("Error getting user profile: %v", err)
@@ -59,14 +59,12 @@ func (h *WebSocketHandler) HandleChatPage(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Template data hazırla
 	data := ChatTemplateData{
 		Title:           "Chat - TravelMate",
 		User:            user,
 		IsAuthenticated: true,
 	}
 
-	// Template'i parse et ve render et
 	tmpl, err := template.ParseFiles("web/templates/pages/chat.html")
 	if err != nil {
 		log.Printf("Template parse error: %v", err)
@@ -81,9 +79,7 @@ func (h *WebSocketHandler) HandleChatPage(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// HandleWebSocket - WebSocket bağlantısını TCP'ye proxy'ler
 func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	// WebSocket bağlantısını upgrade et
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
@@ -91,7 +87,6 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	}
 	defer wsConn.Close()
 
-	// TCP chat server'a bağlan
 	tcpConn, err := net.Dial("tcp", h.tcpAddress)
 	if err != nil {
 		log.Printf("TCP connection error: %v", err)
@@ -102,7 +97,6 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 
 	log.Printf("✅ WebSocket client connected, proxying to TCP %s", h.tcpAddress)
 
-	// WaitGroup ile iki goroutine'i takip et
 	var wg sync.WaitGroup
 	done := make(chan bool, 2)
 
@@ -163,4 +157,51 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	<-done
 	time.Sleep(100 * time.Millisecond)
 	log.Println("🔌 WebSocket connection closed")
+}
+
+// ⭐ YENİ: API endpoint - Geçmiş mesajları almak için
+func (h *WebSocketHandler) GetRoomHistory(w http.ResponseWriter, r *http.Request) {
+	roomName := r.URL.Query().Get("room")
+	if roomName == "" {
+		http.Error(w, "room parameter required", http.StatusBadRequest)
+		return
+	}
+
+	db := database.GetDatabase()
+
+	// Room'u bul
+	var room models.ChatRoom
+	if err := db.Where("name = ?", roomName).First(&room).Error; err != nil {
+		http.Error(w, "Room not found", http.StatusNotFound)
+		return
+	}
+
+	// Mesajları al
+	var messages []models.ChatMessage
+	db.Where("room_id = ?", room.ID).
+		Order("created_at ASC").
+		Limit(50).
+		Find(&messages)
+
+	// User bilgileriyle birlikte response oluştur
+	type MessageResponse struct {
+		Username  string    `json:"username"`
+		Message   string    `json:"message"`
+		Timestamp time.Time `json:"timestamp"`
+	}
+
+	var response []MessageResponse
+	for _, msg := range messages {
+		var user models.User
+		db.First(&user, msg.UserID)
+
+		response = append(response, MessageResponse{
+			Username:  fmt.Sprintf("%s %s", user.FirstName, user.LastName),
+			Message:   msg.Message,
+			Timestamp: msg.CreatedAt,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

@@ -1,4 +1,4 @@
-// internal/chat/server.go
+// internal/chat/tcp_server.go
 package chat
 
 import (
@@ -18,13 +18,11 @@ const (
 	CONN_PORT = ":9090"
 )
 
-// Server - TCP Chat Server
 type Server struct {
 	address string
 	hub     *Hub
 }
 
-// NewServer - Yeni server oluştur
 func NewServer(address string) *Server {
 	return &Server{
 		address: address,
@@ -32,9 +30,7 @@ func NewServer(address string) *Server {
 	}
 }
 
-// Start - Server'ı başlat (PDF Example)
 func (s *Server) Start() error {
-	// 1. Listen for incoming connections
 	listener, err := net.Listen(CONN_TYPE, s.address)
 	if err != nil {
 		return fmt.Errorf("error listening: %v", err)
@@ -43,7 +39,6 @@ func (s *Server) Start() error {
 
 	log.Printf("🚀 TCP Chat Server listening on %s\n", s.address)
 
-	// 2. Accept connections in loop (concurrent server pattern)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -52,20 +47,17 @@ func (s *Server) Start() error {
 		}
 
 		log.Printf("📞 New connection from %s\n", conn.RemoteAddr().String())
-
-		// 3. Handle connection in goroutine (CONCURRENT SERVER)
 		go s.handleConnection(conn)
 	}
 }
 
-// handleConnection - Handle a client connection (PDF pattern)
 func (s *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
 
-	// === STEP 1: Get Username ===
+	// STEP 1: Get Username
 	writer.WriteString("=== Welcome to TravelMate Chat ===\n")
 	writer.WriteString("Enter your username: ")
 	writer.Flush()
@@ -83,7 +75,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 		return
 	}
 
-	// === STEP 2: Get User ID ===
+	// STEP 2: Get User ID
 	writer.WriteString("Enter your User ID: ")
 	writer.Flush()
 
@@ -101,12 +93,12 @@ func (s *Server) handleConnection(conn net.Conn) {
 		return
 	}
 
-	// === STEP 3: List available rooms ===
+	// STEP 3: List available rooms
 	db := database.GetDatabase()
 	var rooms []models.ChatRoom
 	db.Find(&rooms)
 
-	writer.WriteString("\n📍 Available Chat Rooms:\n")
+	writer.WriteString("\n📂 Available Chat Rooms:\n")
 	writer.WriteString("─────────────────────────────\n")
 
 	if len(rooms) == 0 {
@@ -121,7 +113,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 	writer.WriteString("─────────────────────────────\n")
 	writer.Flush()
 
-	// === STEP 4: Room selection ===
+	// STEP 4: Room selection
 	writer.WriteString("Enter room name (or create new): ")
 	writer.Flush()
 
@@ -132,15 +124,12 @@ func (s *Server) handleConnection(conn net.Conn) {
 	}
 	roomName = strings.TrimSpace(roomName)
 
-	// === STEP 5: Find or create room ===
+	// STEP 5: Find or create room
 	var room models.ChatRoom
 	result := db.Where("name = ?", roomName).First(&room)
 
 	if result.Error != nil {
-		// Create new room
-		room = models.ChatRoom{
-			Name: roomName,
-		}
+		room = models.ChatRoom{Name: roomName}
 		if err := db.Create(&room).Error; err != nil {
 			writer.WriteString(fmt.Sprintf("❌ Error creating room: %v\n", err))
 			writer.Flush()
@@ -152,7 +141,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 	}
 	writer.Flush()
 
-	// === STEP 6: Create client ===
+	// STEP 6: Create client
 	client := &Client{
 		ID:       uint(userID),
 		Username: username,
@@ -161,24 +150,48 @@ func (s *Server) handleConnection(conn net.Conn) {
 		Conn:     conn,
 	}
 
-	// Add to hub
 	s.hub.Join(client)
 	defer s.hub.Leave(client)
 
-	// === STEP 7: Broadcast join message ===
+	// STEP 7: Broadcast join message
 	joinMsg := fmt.Sprintf("*** %s joined the room ***", username)
 	s.broadcastMessage(room.ID, joinMsg, "System", client.ID)
 
-	// === STEP 8: Welcome message ===
-	writer.WriteString("\n╔════════════════════════════════╗\n")
+	// ⭐ YENİ: STEP 8: Geçmiş mesajları yükle (SON 50 MESAJ)
+	var previousMessages []models.ChatMessage
+	db.Where("room_id = ?", room.ID).
+		Order("created_at ASC").
+		Limit(50).
+		Find(&previousMessages)
+
+	if len(previousMessages) > 0 {
+		writer.WriteString("\n📜 Previous messages:\n")
+		writer.WriteString("─────────────────────────────\n")
+
+		for _, msg := range previousMessages {
+			// Kullanıcı bilgisini al
+			var user models.User
+			db.First(&user, msg.UserID)
+
+			senderName := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+			timestamp := msg.CreatedAt.Format("15:04:05")
+
+			writer.WriteString(fmt.Sprintf("[%s] %s: %s\n",
+				timestamp, senderName, msg.Message))
+		}
+		writer.WriteString("─────────────────────────────\n")
+		writer.Flush()
+	}
+
+	// STEP 9: Welcome message
+	writer.WriteString("\n╔═══════════════════════════╗\n")
 	writer.WriteString(fmt.Sprintf("║ Welcome to '%s'!\n", roomName))
-	writer.WriteString("╚════════════════════════════════╝\n")
+	writer.WriteString("╚═══════════════════════════╝\n")
 	writer.WriteString("Type your messages (STOP to exit)\n\n")
 	writer.Flush()
 
-	// === STEP 9: Message loop (PDF pattern) ===
+	// STEP 10: Message loop
 	for {
-		// Read message from client
 		netData, err := reader.ReadString('\n')
 		if err != nil {
 			log.Printf("Error reading from %s: %v\n", username, err)
@@ -187,7 +200,6 @@ func (s *Server) handleConnection(conn net.Conn) {
 
 		message := strings.TrimSpace(netData)
 
-		// Check for exit command
 		if message == "STOP" {
 			log.Printf("Client %s requested disconnect\n", username)
 			break
@@ -208,33 +220,30 @@ func (s *Server) handleConnection(conn net.Conn) {
 		// Broadcast to all clients in room
 		s.broadcastMessage(room.ID, message, username, client.ID)
 
-		// Echo confirmation (optional)
+		// Echo confirmation
 		timestamp := time.Now().Format("15:04:05")
 		writer.WriteString(fmt.Sprintf("[%s] Message sent\n", timestamp))
 		writer.Flush()
 	}
 
-	// === STEP 10: Goodbye ===
+	// STEP 11: Goodbye
 	leaveMsg := fmt.Sprintf("*** %s left the room ***", username)
 	s.broadcastMessage(room.ID, leaveMsg, "System", client.ID)
 
 	log.Printf("Connection closed for %s\n", username)
 }
 
-// broadcastMessage - Odadaki herkese mesaj gönder
 func (s *Server) broadcastMessage(roomID uint, message, sender string, senderID uint) {
 	clients := s.hub.GetRoomClients(roomID)
-
 	timestamp := time.Now().Format("15:04:05")
 	formattedMsg := fmt.Sprintf("[%s] %s: %s\n", timestamp, sender, message)
 
 	for _, client := range clients {
-		// Kendine gönderme (opsiyonel)
+		// Sistem mesajları herkese, normal mesajlar kendisi hariç
 		if client.ID == senderID && sender != "System" {
 			continue
 		}
 
-		// Goroutine ile gönder (non-blocking)
 		go func(c *Client, msg string) {
 			conn, ok := c.Conn.(net.Conn)
 			if !ok {

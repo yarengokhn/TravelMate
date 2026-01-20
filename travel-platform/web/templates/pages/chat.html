@@ -21,7 +21,6 @@
             overflow: hidden;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 300px;
             background: #2c3e50;
@@ -98,13 +97,11 @@
             color: white;
         }
 
-        /* Chat Area */
         .chat-main {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #e5ddd5;
-            /* WhatsApp background */
             position: relative;
         }
 
@@ -117,7 +114,6 @@
 
         .chat-header {
             background: #075e54;
-            /* WhatsApp header green */
             color: white;
             padding: 15px 20px;
             display: flex;
@@ -147,7 +143,6 @@
             scroll-behavior: smooth;
         }
 
-        /* WhatsApp style message bubbles */
         .message {
             margin-bottom: 10px;
             display: flex;
@@ -166,7 +161,6 @@
             }
         }
 
-        /* System messages */
         .message.system {
             justify-content: center;
         }
@@ -182,7 +176,6 @@
             text-align: center;
         }
 
-        /* Other users' messages (left) */
         .message.other {
             justify-content: flex-start;
         }
@@ -193,17 +186,14 @@
             border-radius: 8px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             max-width: 65%;
-            position: relative;
         }
 
-        /* Own messages (right) */
         .message.own {
             justify-content: flex-end;
         }
 
         .message.own .bubble {
             background: #dcf8c6;
-            /* WhatsApp green */
             padding: 8px 12px;
             border-radius: 8px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -231,7 +221,6 @@
             margin-top: 4px;
         }
 
-        /* Input Area */
         .input-area {
             padding: 10px 20px;
             background: #f0f0f0;
@@ -239,7 +228,6 @@
             gap: 10px;
             align-items: center;
             flex-shrink: 0;
-            /* Input alanı küçülmesin */
         }
 
         .input-area input {
@@ -295,7 +283,6 @@
             color: #075e54;
         }
 
-        /* Scrollbar */
         .messages::-webkit-scrollbar {
             width: 6px;
         }
@@ -311,7 +298,6 @@
     </style>
 
     <div class="chat-container">
-        <!-- Sidebar -->
         <div class="sidebar">
             <h2><i class="fas fa-comments"></i> TravelMate Chat</h2>
 
@@ -340,7 +326,6 @@
             <div class="status" id="status"></div>
         </div>
 
-        <!-- Chat Area -->
         <div class="chat-main">
             <div id="waitingScreen" class="waiting-screen">
                 <i class="fas fa-comments"></i>
@@ -382,7 +367,6 @@
         const waitingScreen = document.getElementById('waitingScreen');
         const chatArea = document.getElementById('chatArea');
 
-        // Kullanıcı adını al
         currentUsername = document.getElementById('currentUsername').value.trim();
 
         connectBtn.addEventListener('click', connect);
@@ -445,7 +429,7 @@
             const message = messageInput.value.trim();
             if (!message || !connected) return;
 
-            // Mesajı anında ekranda göster (kendi mesajımız olarak)
+            // Kendi mesajını göster
             displayOwnMessage(message);
 
             // Sunucuya gönder
@@ -453,7 +437,6 @@
             messageInput.value = '';
         }
 
-        // Kendi gönderdiğimiz mesajı göster
         function displayOwnMessage(text) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message own';
@@ -463,39 +446,36 @@
 
             messageDiv.innerHTML = `
                 <div class="bubble">
-                    <div class="message-text">${text}</div>
+                    <div class="message-text">${escapeHtml(text)}</div>
                     <div class="message-time">${time}</div>
                 </div>
             `;
 
             messagesDiv.appendChild(messageDiv);
-
-            // Scroll'u en alta getir
-            setTimeout(() => {
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }, 50);
+            scrollToBottom();
         }
 
         function displayMessage(text) {
-            // TCP server'dan gelen gereksiz mesajları filtrele
+            // Gereksiz mesajları filtrele
             const ignoredMessages = [
                 'Welcome to TravelMate Chat',
                 'Enter your username',
                 'Enter your User ID',
                 'Available Chat Rooms',
-                '───────────────',
+                '─────────────────',
                 '(No rooms yet)',
                 'Enter room name',
                 'Created new room',
                 'Joined room',
                 'Type your messages',
-                'Message sent'
+                'Message sent',
+                'Previous messages', // ⭐ Geçmiş mesajlar başlığı
+                '═══════════════', // Welcome box
             ];
 
-            // Görmezden gelinecek mesajları atla
             for (const ignored of ignoredMessages) {
                 if (text.includes(ignored)) {
-                    return; // Mesajı gösterme
+                    return;
                 }
             }
 
@@ -505,7 +485,6 @@
             if (text.includes('***') || text.includes('joined the room') || text.includes('left the room')) {
                 messageDiv.className = 'message system';
 
-                // Hoş geldin mesajını düzelt
                 let systemText = text.replace(/\*\*\*/g, '').trim();
                 if (systemText.includes('joined the room')) {
                     const name = systemText.split(' joined')[0].trim();
@@ -515,7 +494,7 @@
                     systemText = `${name} left the room 👋`;
                 }
 
-                messageDiv.innerHTML = `<div class="bubble">${systemText}</div>`;
+                messageDiv.innerHTML = `<div class="bubble">${escapeHtml(systemText)}</div>`;
             }
             // Normal mesajlar
             else {
@@ -523,33 +502,40 @@
                 if (match) {
                     const [, time, sender, message] = match;
 
-                    // Kendi mesajımızı tekrar gösterme (zaten gösterdik)
+                    // ⭐ DÜZELTİLDİ: Kendi mesajını tekrar gösterme
                     const isOwnMessage = sender.trim() === currentUsername;
                     if (isOwnMessage) {
-                        return; // Kendi mesajımızı sunucudan tekrar almayalım
+                        return; // Kendi mesajını zaten displayOwnMessage() ile gösterdin
                     }
 
                     // Başkasının mesajı
                     messageDiv.className = 'message other';
 
                     let bubbleHTML = '<div class="bubble">';
-                    bubbleHTML += `<div class="message-sender">${sender}</div>`;
+                    bubbleHTML += `<div class="message-sender">${escapeHtml(sender)}</div>`;
                     bubbleHTML += `
-                        <div class="message-text">${message}</div>
+                        <div class="message-text">${escapeHtml(message)}</div>
                         <div class="message-time">${time}</div>
                     `;
                     bubbleHTML += '</div>';
 
                     messageDiv.innerHTML = bubbleHTML;
                 } else {
-                    // Format eşleşmezse atla
                     return;
                 }
             }
 
             messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        }
 
-            // Scroll'u en alta getir (smooth scroll)
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function scrollToBottom() {
             setTimeout(() => {
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }, 50);
@@ -570,7 +556,6 @@
             connectBtn.style.display = 'none';
             disconnectBtn.style.display = 'block';
 
-            // Input'a focus ver
             setTimeout(() => {
                 messageInput.focus();
             }, 100);
