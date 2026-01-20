@@ -317,3 +317,25 @@ func (h *TemplateHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+func (h *TemplateHandler) ProfilePage(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	user, err := h.userService.GetProfile(userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	data := &TemplateData{
+		Title:           "Profile - TravelMate",
+		User:            user,
+		IsAuthenticated: true,
+	}
+
+	h.render(w, "profile.html", data)
+}

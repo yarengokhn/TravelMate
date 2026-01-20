@@ -1,0 +1,88 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="profile-page">
+    <div class="profile-header">
+        <div class="profile-avatar-large">
+            {{if .User}}
+            {{substr .User.FirstName 0 1}}{{substr .User.LastName 0 1}}
+            {{end}}
+        </div>
+        <div class="profile-info">
+            <h1>{{if .User}}{{.User.FirstName}} {{.User.LastName}}{{end}}</h1>
+            <p class="profile-email">
+                <i class="fas fa-envelope"></i> {{if .User}}{{.User.Email}}{{end}}
+            </p>
+        </div>
+        <button class="btn btn-primary" onclick="toggleEditMode()">
+            <i class="fas fa-edit"></i> Edit Name
+        </button>
+    </div>
+
+    <!-- Edit Profile Form (Hidden by default) -->
+    <div class="profile-edit-section" id="editSection" style="display: none;">
+        <div class="edit-form-container">
+            <h2><i class="fas fa-user-edit"></i> Edit Name</h2>
+            <form id="editProfileForm" class="profile-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name">
+                            <i class="fas fa-user"></i> First Name
+                        </label>
+                        <input type="text" id="first_name" name="first_name"
+                            value="{{if .User}}{{.User.FirstName}}{{end}}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="last_name">
+                            <i class="fas fa-user"></i> Last Name
+                        </label>
+                        <input type="text" id="last_name" name="last_name" value="{{if .User}}{{.User.LastName}}{{end}}"
+                            required>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="toggleEditMode()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="quick-links">
+        <h2><i class="fas fa-link"></i> Quick Links</h2>
+        <div class="links-grid">
+            <a href="/dashboard" class="link-card">
+                <i class="fas fa-th-large"></i>
+                <h3>Dashboard</h3>
+                <p>View all your trips</p>
+            </a>
+
+            <a href="/trips/new" class="link-card">
+                <i class="fas fa-plus-circle"></i>
+                <h3>Create Trip</h3>
+                <p>Plan a new adventure</p>
+            </a>
+
+            <a href="/explore" class="link-card">
+                <i class="fas fa-compass"></i>
+                <h3>Explore</h3>
+                <p>Discover public trips</p>
+            </a>
+
+            <a href="/chat" class="link-card">
+                <i class="fas fa-comments"></i>
+                <h3>Chat</h3>
+                <p>Connect with travelers</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+{{end}}
