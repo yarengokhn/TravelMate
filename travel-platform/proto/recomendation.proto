@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package recommendation;
+
+option go_package = "travel-platform/proto/recommendation";
+
+message TripInfo {
+  uint32 trip_id = 1;
+  string destination = 2;
+  double budget = 3;
+  string start_date = 4;
+  string end_date = 5;
+  repeated string activities = 6;
+}
+
+message UserTripHistory {
+  uint32 user_id = 1;
+  repeated TripInfo past_trips = 2;
+}
+
+message RecommendationRequest {
+  uint32 user_id = 1;
+  string preferred_destination = 2;
+  double max_budget = 3;
+}
+
+message Recommendation {
+  string destination = 1;
+  string description = 2;
+  double estimated_budget = 3;
+  repeated string suggested_activities = 4;
+  string best_season = 5;
+  double match_score = 6;
+}
+
+message RecommendationResponse {
+  repeated Recommendation recommendations = 1;
+  string message = 2;
+}
+
+message BudgetAnalysisRequest {
+  uint32 trip_id = 1;
+  double total_budget = 2;
+  repeated Expense expenses = 3;
+}
+
+message Expense {
+  string category = 1;
+  double amount = 2;
+  string currency = 3;
+}
+
+message CategoryAnalysis {
+  string category = 1;
+  double total_spent = 2;
+  double percentage = 3;
+  string status = 4;
+}
+
+message BudgetAnalysisResponse {
+  double total_budget = 1;
+  double total_spent = 2;
+  double remaining = 3;
+  repeated CategoryAnalysis category_breakdown = 4;
+  repeated string warnings = 5;
+  repeated string suggestions = 6;
+}
+
+service RecommendationService {
+  rpc GetRecommendations(RecommendationRequest) returns (RecommendationResponse) {}
+  rpc AnalyzeBudget(BudgetAnalysisRequest) returns (BudgetAnalysisResponse) {}
+}

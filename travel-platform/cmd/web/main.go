@@ -3,20 +3,25 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"travel-platform/internal/chat"
 	"travel-platform/internal/database"
+	grpcserver "travel-platform/internal/grpc"
 	"travel-platform/internal/handlers"
 	"travel-platform/internal/middleware"
 	"travel-platform/internal/repository"
 	"travel-platform/internal/services"
+	pb "travel-platform/proto"
 
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
 
 const (
 	HTTP_PORT = ":8080"
 	TCP_PORT  = ":9090"
+	GRPC_PORT = ":50051"
 )
 
 func main() {
@@ -110,12 +115,31 @@ func main() {
 		}
 	}()
 
+	// ========== gRPC SERVER ==========
+	go func() {
+		lis, err := net.Listen("tcp", GRPC_PORT)
+		if err != nil {
+			log.Fatalf("❌ gRPC dinlenemedi %s: %v", GRPC_PORT, err)
+		}
+
+		grpcServer := grpc.NewServer()
+		recommendationServer := grpcserver.NewRecommendationServer()
+		pb.RegisterRecommendationServiceServer(grpcServer, recommendationServer)
+
+		fmt.Printf("🚀 gRPC Server: localhost%s\n", GRPC_PORT)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("❌ gRPC hatası: %v", err)
+		}
+	}()
+
 	// ========== START HTTP SERVER ==========
 	fmt.Println("╔═══════════════════════════════════════════╗")
 	fmt.Printf("🚀 HTTP Server: http://localhost%s\n", HTTP_PORT)
 	fmt.Printf("💬 TCP Chat:    tcp://localhost%s\n", TCP_PORT)
 	fmt.Printf("🌐 WebSocket:   ws://localhost%s/ws/chat\n", HTTP_PORT)
+	fmt.Printf("🌐 gRPC:        http://localhost%s\n", GRPC_PORT)
 	fmt.Println("╚═══════════════════════════════════════════╝")
 
 	log.Fatal(http.ListenAndServe(HTTP_PORT, r))
+
 }
