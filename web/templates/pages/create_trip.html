@@ -7,7 +7,8 @@
 </div>
 
 <div class="form-container">
-    <form action="/api/trips" method="POST" class="trip-form" id="createTripForm">
+    <form class="trip-form" id="createTripForm">
+        <!-- Basic Information -->
         <div class="form-section">
             <h2><i class="fas fa-info-circle"></i> Basic Information</h2>
 
@@ -51,6 +52,7 @@
             </div>
         </div>
 
+        <!-- Budget & Privacy -->
         <div class="form-section">
             <h2><i class="fas fa-euro-sign"></i> Budget & Privacy</h2>
 
@@ -71,6 +73,32 @@
             </div>
         </div>
 
+        <!-- 🆕 Activities Section -->
+        <div class="form-section">
+            <div class="section-header">
+                <h2><i class="fas fa-hiking"></i> Activities (Optional)</h2>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addActivity()">
+                    <i class="fas fa-plus"></i> Add Activity
+                </button>
+            </div>
+            <div id="activitiesContainer" class="dynamic-container">
+                <!-- Dynamic activity fields will be added here -->
+            </div>
+        </div>
+
+        <!-- 🆕 Expenses Section -->
+        <div class="form-section">
+            <div class="section-header">
+                <h2><i class="fas fa-receipt"></i> Expenses (Optional)</h2>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addExpense()">
+                    <i class="fas fa-plus"></i> Add Expense
+                </button>
+            </div>
+            <div id="expensesContainer" class="dynamic-container">
+                <!-- Dynamic expense fields will be added here -->
+            </div>
+        </div>
+
         <div class="form-actions">
             <a href="/dashboard" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
@@ -88,17 +116,19 @@
             <ul>
                 <li>Choose a descriptive title for your trip</li>
                 <li>Set realistic dates and budget</li>
+                <li>Add activities and expenses now or later</li>
                 <li>Make your trip public to connect with other travelers</li>
-                <li>You can add activities and expenses later</li>
             </ul>
         </div>
 
         <div class="info-card">
-            <i class="fas fa-shield-alt"></i>
-            <h3>Privacy</h3>
-            <p>Private trips are only visible to you. Public trips can be discovered by other travelers but your
-                personal information remains protected.</p>
+            <i class="fas fa-info-circle"></i>
+            <h3>Activities & Expenses</h3>
+            <p>You can add activities and expenses now while creating your trip, or add them later from the trip detail
+                page.</p>
         </div>
     </div>
 </div>
+
+<script src="/static/js/create_trip.js"></script>
 {{end}}

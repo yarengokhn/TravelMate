@@ -21,10 +21,7 @@ type Trip struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Expenses []Expense `gorm:"foreignKey:TripID" json:"expenses,omitempty"`
-
-	// Itineraries []Itinerary `gorm:"foreignKey:TripID" json:"itineraries,omitempty"`
-
+	Expenses   []Expense  `gorm:"foreignKey:TripID" json:"expenses,omitempty"`
 	Activities []Activity `gorm:"foreignKey:TripID" json:"activities,omitempty"`
 	IsPublic   bool       `gorm:"default:true" json:"is_public"`
 }

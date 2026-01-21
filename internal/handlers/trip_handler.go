@@ -33,9 +33,8 @@ func NewTripHandler(service services.TripService) TripHandler {
 	return &tripHandler{service: service}
 }
 
-// CreateTrip - Yeni gezi oluştur (🔒 Protected)
+// CreateTrip (🔒 Protected)
 func (h *tripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
-	// Context'ten userID al
 	userID, ok := middleware.GetUserIDFromContext(r)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -46,11 +45,25 @@ func (h *tripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Title       string  `json:"title"`
 		Destination string  `json:"destination"`
-		StartDate   string  `json:"start_date"` // "2026-06-01"
-		EndDate     string  `json:"end_date"`   // "2026-06-10"
+		StartDate   string  `json:"start_date"`
+		EndDate     string  `json:"end_date"`
 		Description string  `json:"description"`
 		Budget      float64 `json:"budget"`
 		IsPublic    bool    `json:"is_public"`
+
+		// 🆕 Nested Activities ve Expenses (OPSİYONEL)
+		Activities []struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Location    string `json:"location"`
+			Date        string `json:"date"`
+		} `json:"activities,omitempty"`
+
+		Expenses []struct {
+			Category    string  `json:"category"`
+			Amount      float64 `json:"amount"`
+			ExpenseDate string  `json:"expense_date"`
+		} `json:"expenses,omitempty"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -82,8 +95,46 @@ func (h *tripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 		Budget:      req.Budget,
 		IsPublic:    req.IsPublic,
 	}
+	// 🆕 Activities varsa ekle
+	if len(req.Activities) > 0 {
+		for _, actReq := range req.Activities {
+			if actReq.Name == "" || actReq.Date == "" {
+				continue // Skip invalid activities
+			}
 
-	// Service'e gönder
+			actDate, err := time.Parse("2006-01-02", actReq.Date)
+			if err != nil {
+				continue // Skip if date is invalid
+			}
+
+			activity := models.Activity{
+				Name:        actReq.Name,
+				Description: actReq.Description,
+				Location:    actReq.Location,
+				Date:        actDate,
+			}
+			trip.Activities = append(trip.Activities, activity)
+		}
+	}
+
+	// 🆕 Expenses varsa ekle
+	if len(req.Expenses) > 0 {
+		for _, expReq := range req.Expenses {
+			expenseDate, err := time.Parse("2006-01-02", expReq.ExpenseDate)
+			if err != nil {
+				continue // Skip invalid expenses
+			}
+
+			expense := models.Expense{
+				Category:    expReq.Category,
+				Amount:      expReq.Amount,
+				ExpenseDate: expenseDate,
+			}
+			trip.Expenses = append(trip.Expenses, expense)
+		}
+	}
+
+	// Service'e gönder (GORM otomatik olarak activities ve expenses'i de kaydeder)
 	if err := h.service.CreateTrip(trip); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
