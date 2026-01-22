@@ -67,7 +67,9 @@
                     </div>
                     {{if $trip.Expenses}}
                     {{$spent := 0.0}}
-                    {{range $trip.Expenses}}{{$spent = add $spent .Amount}}{{end}}
+                    {{range $trip.Expenses}}
+                    {{$spent = addFloat $spent .Amount}}
+                    {{end}}
                     <div class="budget-spent">
                         <span class="budget-label">Spent</span>
                         <span class="budget-value spent">€{{printf "%.2f" $spent}}</span>
@@ -78,6 +80,7 @@
                             €{{printf "%.2f" (sub $trip.Budget $spent)}}
                         </span>
                     </div>
+
                     {{end}}
                 </div>
             </section>

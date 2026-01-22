@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"html/template" //XSS saldırılarını önlemek için HTML'yi güvenli bir şekilde işler.
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,13 +17,11 @@ import (
 )
 
 type TemplateHandler struct {
-	//Handlers call the template engine, passing templates and dynamic data.
-	templates   *template.Template //Parse edilmiş tüm HTML template’lerin bellekte tutulduğu yapı
+	templates   *template.Template
 	userService services.UserService
 	tripService services.TripService
 }
 
-// TemplateData - Tüm template'lere geçilecek ortak veri yapısı
 type TemplateData struct {
 	Title           string
 	User            interface{}
@@ -38,8 +36,17 @@ func NewTemplateHandler(userService services.UserService, tripService services.T
 		"add": func(a, b int) int {
 			return a + b
 		},
+		"addFloat": func(a, b float64) float64 {
+			return a + b
+		},
 		"sub": func(a, b float64) float64 {
 			return a - b
+		},
+		"percentage": func(spent, total float64) float64 {
+			if total == 0 {
+				return 0
+			}
+			return (spent / total) * 100
 		},
 		"daysBetween": func(start, end time.Time) int {
 			return int(end.Sub(start).Hours() / 24)
@@ -53,6 +60,9 @@ func NewTemplateHandler(userService services.UserService, tripService services.T
 		"lower": func(s string) string {
 			return strings.ToLower(s)
 		},
+		"upper": func(s string) string {
+			return strings.ToUpper(s)
+		},
 		"iterate": func(count uint) []int {
 			result := make([]int, count)
 			for i := range result {
@@ -65,8 +75,6 @@ func NewTemplateHandler(userService services.UserService, tripService services.T
 		},
 	}
 
-	// Load shared templates (layouts and partials)
-	// We do NOT load pages here to avoid "content" block overwrite
 	layoutFiles, err := filepath.Glob("web/templates/layout/*.html")
 	if err != nil {
 		log.Fatal(err)
@@ -78,13 +86,12 @@ func NewTemplateHandler(userService services.UserService, tripService services.T
 
 	sharedFiles := append(layoutFiles, partialFiles...)
 
-	// Create the base template with functions and shared files
 	tmpl := template.New("").Funcs(funcMap)
 	if len(sharedFiles) > 0 {
 		var err error
 		tmpl, err = tmpl.ParseFiles(sharedFiles...)
 		if err != nil {
-			log.Fatalf("❌ Shared templates error: %v", err)
+			log.Fatalf("Shared templates error: %v", err)
 		}
 	}
 
@@ -97,16 +104,13 @@ func NewTemplateHandler(userService services.UserService, tripService services.T
 	}
 }
 
-// Helper method - Request-scoped render
 func (h *TemplateHandler) render(w http.ResponseWriter, tmplName string, data *TemplateData) {
-	// 1. Clone shared templates
 	tmpl, err := h.templates.Clone()
 	if err != nil {
 		http.Error(w, "Template clone error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 2. Parse the specific page
 	pagePath := filepath.Join("web", "templates", "pages", tmplName)
 	if _, err := os.Stat(pagePath); os.IsNotExist(err) {
 		http.Error(w, "Template not found: "+tmplName, http.StatusNotFound)
@@ -119,16 +123,13 @@ func (h *TemplateHandler) render(w http.ResponseWriter, tmplName string, data *T
 		return
 	}
 
-	// 3. Execute the specific page template
 	err = tmpl.ExecuteTemplate(w, tmplName, data)
 	if err != nil {
 		http.Error(w, "Render error: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 
-// Home Page
 func (h *TemplateHandler) Home(w http.ResponseWriter, r *http.Request) {
-	// Public trips'leri al
 	trips, err := h.tripService.GetPublicTrips()
 
 	data := &TemplateData{
@@ -140,7 +141,6 @@ func (h *TemplateHandler) Home(w http.ResponseWriter, r *http.Request) {
 		data.Error = "Unable to load trips"
 	}
 
-	// Check if user is authenticated
 	if userID, ok := middleware.GetUserIDFromContext(r); ok {
 		user, _ := h.userService.GetProfile(userID)
 		data.User = user
@@ -150,7 +150,6 @@ func (h *TemplateHandler) Home(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "home.html", data)
 }
 
-// Login Page (GET)
 func (h *TemplateHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title: "Login - TravelMate",
@@ -158,7 +157,6 @@ func (h *TemplateHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "login.html", data)
 }
 
-// Register Page (GET)
 func (h *TemplateHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	data := &TemplateData{
 		Title: "Register - TravelMate",
@@ -166,7 +164,6 @@ func (h *TemplateHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "register.html", data)
 }
 
-// Dashboard - Kullanıcının kendi trips'leri
 func (h *TemplateHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r)
 	if !ok {
@@ -196,7 +193,6 @@ func (h *TemplateHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "dashboard.html", data)
 }
 
-// Create Trip Page (GET)
 func (h *TemplateHandler) CreateTripPage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r)
 	if !ok {
@@ -215,9 +211,7 @@ func (h *TemplateHandler) CreateTripPage(w http.ResponseWriter, r *http.Request)
 	h.render(w, "create_trip.html", data)
 }
 
-// Trip Detail Page
 func (h *TemplateHandler) TripDetailPage(w http.ResponseWriter, r *http.Request) {
-	// Get trip ID from URL
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint(vars["id"], 10, 32)
 	if err != nil {
@@ -225,7 +219,6 @@ func (h *TemplateHandler) TripDetailPage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Get trip from service
 	trip, err := h.tripService.GetTripByID(uint(id))
 	if err != nil {
 		data := &TemplateData{
@@ -241,7 +234,6 @@ func (h *TemplateHandler) TripDetailPage(w http.ResponseWriter, r *http.Request)
 		Data:  trip,
 	}
 
-	// Check if user is authenticated
 	if userID, ok := middleware.GetUserIDFromContext(r); ok {
 		user, _ := h.userService.GetProfile(userID)
 		data.User = user
@@ -251,7 +243,6 @@ func (h *TemplateHandler) TripDetailPage(w http.ResponseWriter, r *http.Request)
 	h.render(w, "trip_detail.html", data)
 }
 
-// Explore Trips Page
 func (h *TemplateHandler) ExplorePage(w http.ResponseWriter, r *http.Request) {
 	trips, err := h.tripService.GetPublicTrips()
 
@@ -275,9 +266,7 @@ func (h *TemplateHandler) ExplorePage(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "explore.html", data)
 }
 
-// Chat Page
 func (h *TemplateHandler) ChatPage(w http.ResponseWriter, r *http.Request) {
-	// Auth middleware should have handled this, but good to check
 	userID, ok := middleware.GetUserIDFromContext(r)
 	if !ok {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -299,14 +288,12 @@ func (h *TemplateHandler) ChatPage(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "chat.html", data)
 }
 
-// Logout
 func (h *TemplateHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err == nil {
 		middleware.DeleteSession(cookie.Value)
 	}
 
-	// Clear cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    "",
@@ -338,4 +325,46 @@ func (h *TemplateHandler) ProfilePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.render(w, "profile.html", data)
+}
+
+func (h *TemplateHandler) EditTripPage(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		http.Error(w, "Invalid trip ID", http.StatusBadRequest)
+		return
+	}
+
+	trip, err := h.tripService.GetTripByID(uint(id))
+	if err != nil {
+		data := &TemplateData{
+			Title: "Trip Not Found - TravelMate",
+			Error: "The trip you're looking for doesn't exist",
+		}
+		h.render(w, "edit_trip.html", data)
+		return
+	}
+
+	// Check ownership
+	if trip.UserID != userID {
+		http.Error(w, "Forbidden - You can only edit your own trips", http.StatusForbidden)
+		return
+	}
+
+	user, _ := h.userService.GetProfile(userID)
+
+	data := &TemplateData{
+		Title:           "Edit Trip - TravelMate",
+		User:            user,
+		Data:            trip,
+		IsAuthenticated: true,
+	}
+
+	h.render(w, "edit_trip.html", data)
 }
