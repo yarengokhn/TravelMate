@@ -109,14 +109,20 @@
                     {{end}}
                 </div>
 
-                {{if .Activities}}
                 <div class="trip-stats">
+                    {{if .Activities}}
                     <span>
                         <i class="fas fa-hiking"></i>
                         {{len .Activities}} {{if eq (len .Activities) 1}}activity{{else}}activities{{end}}
                     </span>
+                    {{end}}
+                    {{if .Expenses}}
+                    <span>
+                        <i class="fas fa-receipt"></i>
+                        {{len .Expenses}} {{if eq (len .Expenses) 1}}expense{{else}}expenses{{end}}
+                    </span>
+                    {{end}}
                 </div>
-                {{end}}
             </div>
 
             <div class="trip-card-footer">
@@ -175,7 +181,6 @@
 </div>
 
 <script>
-    // Search functionality
     function searchTrips() {
         const searchValue = document.getElementById('searchInput').value.toLowerCase();
         const cards = document.querySelectorAll('.trip-card');
@@ -194,7 +199,6 @@
         updateTripCount(visibleCount);
     }
 
-    // Sort functionality
     function sortTrips() {
         const sortBy = document.getElementById('sortBy').value;
         const grid = document.getElementById('tripGrid');
@@ -210,7 +214,7 @@
                     const daysA = parseInt(a.querySelector('.trip-duration').textContent);
                     const daysB = parseInt(b.querySelector('.trip-duration').textContent);
                     return daysB - daysA;
-                default: // recent
+                default:
                     return new Date(b.dataset.startDate) - new Date(a.dataset.startDate);
             }
         });
@@ -218,7 +222,6 @@
         cards.forEach(card => grid.appendChild(card));
     }
 
-    // Filter by month
     function filterByMonth() {
         const month = document.getElementById('filterMonth').value;
         const cards = document.querySelectorAll('.trip-card');
@@ -236,13 +239,11 @@
         updateTripCount(visibleCount);
     }
 
-    // Filter by destination tag
     function filterByDestination(destination) {
         document.getElementById('searchInput').value = destination;
         searchTrips();
     }
 
-    // Update trip count
     function updateTripCount(count) {
         const countEl = document.getElementById('tripCount');
         countEl.textContent = `Showing ${count} ${count === 1 ? 'trip' : 'trips'}`;

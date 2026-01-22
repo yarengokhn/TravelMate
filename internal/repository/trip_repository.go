@@ -30,7 +30,10 @@ func (r *tripRepository) CreateTrip(trip *models.Trip) error {
 
 func (r *tripRepository) GetTripByID(id uint) (*models.Trip, error) {
 	var trip models.Trip
-	result := r.db.First(&trip, id).Error
+	result := r.db.Preload("Activities").
+		Preload("Expenses").
+		Preload("User").
+		First(&trip, id).Error
 	if result != nil {
 		return nil, result
 	}
@@ -39,7 +42,10 @@ func (r *tripRepository) GetTripByID(id uint) (*models.Trip, error) {
 
 func (r *tripRepository) GetTripByUserID(userID uint) ([]models.Trip, error) {
 	var trips []models.Trip
-	result := r.db.Where("user_id = ?", userID).Find(&trips).Error
+	result := r.db.Preload("Activities").
+		Preload("Expenses").
+		Where("user_id = ?", userID).
+		Find(&trips).Error
 	if result != nil {
 		return nil, result
 	}
@@ -48,15 +54,24 @@ func (r *tripRepository) GetTripByUserID(userID uint) ([]models.Trip, error) {
 
 func (r *tripRepository) GetPublicTrips() ([]models.Trip, error) {
 	var trips []models.Trip
-	result := r.db.Where("is_public = ?", true).Find(&trips).Error
+	result := r.db.Preload("User").
+		Preload("Activities").
+		Preload("Expenses").
+		Where("is_public = ?", true).
+		Find(&trips).Error
 	if result != nil {
 		return nil, result
 	}
 	return trips, nil
 }
+
 func (r *tripRepository) GetByDestination(destination string) ([]models.Trip, error) {
 	var trips []models.Trip
-	result := r.db.Where("destination LIKE ? AND is_public= ?", "%"+destination+"%", true).Find(&trips).Error
+	result := r.db.Preload("User").
+		Preload("Activities").
+		Preload("Expenses").
+		Where("destination LIKE ? AND is_public= ?", "%"+destination+"%", true).
+		Find(&trips).Error
 	if result != nil {
 		return nil, result
 	}

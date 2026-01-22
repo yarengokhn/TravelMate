@@ -12,4 +12,6 @@ type Activity struct {
 	Description string    `json:"description"`
 	Location    string    `json:"location"`
 	Date        time.Time `gorm:"not null" json:"date"`
+	StartTime   time.Time `json:"start_time"`
+	Rating      uint      `json:"rating"`
 }
