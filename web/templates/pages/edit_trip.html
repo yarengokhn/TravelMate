@@ -1,0 +1,207 @@
+{{template "base" .}}
+
+{{define "content"}}
+{{if .Data}}
+{{$trip := .Data}}
+{{$startDate := $trip.StartDate.Format "2006-01-02"}}
+{{$endDate := $trip.EndDate.Format "2006-01-02"}}
+
+<div class="page-header">
+    <h1><i class="fas fa-edit"></i> Edit Trip</h1>
+    <p>Update your trip details</p>
+</div>
+
+<div class="form-container">
+    <form class="trip-form" id="editTripForm">
+        <div class="form-section">
+            <h2><i class="fas fa-info-circle"></i> Basic Information</h2>
+
+            <div class="form-group">
+                <label for="title">Trip Title *</label>
+                <input type="text" id="title" name="title" required value="{{$trip.Title}}"
+                    placeholder="e.g., Summer Adventure in Paris" maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label for="destination">Destination *</label>
+                <input type="text" id="destination" name="destination" required value="{{$trip.Destination}}"
+                    placeholder="e.g., Paris, France" list="destinations">
+                <datalist id="destinations">
+                    <option value="Paris, France">
+                    <option value="Tokyo, Japan">
+                    <option value="New York, USA">
+                    <option value="Barcelona, Spain">
+                    <option value="Rome, Italy">
+                </datalist>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Start Date *</label>
+                    <input type="date" id="start_date" name="start_date" required value="{{$startDate}}">
+                </div>
+
+                <div class="form-group">
+                    <label for="end_date">End Date *</label>
+                    <input type="date" id="end_date" name="end_date" required value="{{$endDate}}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="4"
+                    placeholder="Describe your trip, what you plan to do, places you want to visit..."
+                    maxlength="500">{{$trip.Description}}</textarea>
+                <small class="form-hint">Maximum 500 characters</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2><i class="fas fa-euro-sign"></i> Budget & Privacy</h2>
+
+            <div class="form-group">
+                <label for="budget">Budget (EUR)</label>
+                <input type="number" id="budget" name="budget" step="0.01" min="0" value="{{printf " %.2f"
+                    $trip.Budget}}" placeholder="0.00">
+                <small class="form-hint">Optional: Set your trip budget</small>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="is_public" name="is_public" {{if $trip.IsPublic}}checked{{end}}>
+                    <span>
+                        <strong>Make this trip public</strong>
+                        <small>Other travelers will be able to see this trip</small>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-header">
+                <h2><i class="fas fa-hiking"></i> Activities</h2>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addActivity()">
+                    <i class="fas fa-plus"></i> Add Activity
+                </button>
+            </div>
+            <div id="activitiesContainer" class="dynamic-container">
+                {{range $index, $activity := $trip.Activities}}
+                {{$activityDate := $activity.Date.Format "2006-01-02"}}
+                <div class="dynamic-item activity-item-edit" data-activity-id="{{$activity.ID}}">
+                    <div class="dynamic-item-header">
+                        <h4><i class="fas fa-hiking"></i> Activity {{add $index 1}}</h4>
+                        <button type="button" class="btn-remove" onclick="removeActivity(this)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Activity Name *</label>
+                            <input type="text" name="activities[{{$index}}][name]" value="{{$activity.Name}}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date *</label>
+                            <input type="date" name="activities[{{$index}}][date]" value="{{$activityDate}}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" name="activities[{{$index}}][location]" value="{{$activity.Location}}">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="activities[{{$index}}][description]"
+                            rows="2">{{$activity.Description}}</textarea>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-header">
+                <h2><i class="fas fa-receipt"></i> Expenses</h2>
+                <button type="button" class="btn btn-small btn-secondary" onclick="addExpense()">
+                    <i class="fas fa-plus"></i> Add Expense
+                </button>
+            </div>
+            <div id="expensesContainer" class="dynamic-container">
+                {{range $index, $expense := $trip.Expenses}}
+                {{$expenseDate := $expense.ExpenseDate.Format "2006-01-02"}}
+                <div class="dynamic-item expense-item-edit" data-expense-id="{{$expense.ID}}">
+                    <div class="dynamic-item-header">
+                        <h4><i class="fas fa-receipt"></i> Expense {{add $index 1}}</h4>
+                        <button type="button" class="btn-remove" onclick="removeExpense(this)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select name="expenses[{{$index}}][category]" required>
+                                <option value="food" {{if eq $expense.Category "food" }}selected{{end}}>Food</option>
+                                <option value="transport" {{if eq $expense.Category "transport" }}selected{{end}}>
+                                    Transport</option>
+                                <option value="accommodation" {{if eq $expense.Category "accommodation"
+                                    }}selected{{end}}>Accommodation</option>
+                                <option value="entertainment" {{if eq $expense.Category "entertainment"
+                                    }}selected{{end}}>Entertainment</option>
+                                <option value="other" {{if eq $expense.Category "other" }}selected{{end}}>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (EUR) *</label>
+                            <input type="number" name="expenses[{{$index}}][amount]" value="{{printf " %.2f"
+                                $expense.Amount}}" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date *</label>
+                            <input type="date" name="expenses[{{$index}}][expense_date]" value="{{$expenseDate}}"
+                                required>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="/trips/{{$trip.ID}}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i> Update Trip
+            </button>
+        </div>
+    </form>
+
+    <div class="form-sidebar">
+        <div class="info-card">
+            <i class="fas fa-info-circle"></i>
+            <h3>Editing Trip</h3>
+            <p>You're editing: <strong>{{$trip.Title}}</strong></p>
+            <p class="text-muted">Make your changes and click Update Trip to save.</p>
+        </div>
+
+        <div class="info-card">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Note</h3>
+            <p>Activities and expenses are managed separately. Use the add/remove buttons to update them.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tripId = '{{$trip.ID}}';
+</script>
+<script src="/static/js/edit_trip.js"></script>
+
+{{else}}
+<div class="error-state">
+    <i class="fas fa-exclamation-triangle"></i>
+    <h2>Trip Not Found</h2>
+    <p>The trip you're trying to edit doesn't exist or you don't have permission to edit it.</p>
+    <a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
+</div>
+{{end}}
+{{end}}

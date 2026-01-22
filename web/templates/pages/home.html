@@ -64,7 +64,7 @@
                     <span><i class="far fa-calendar"></i> {{.StartDate.Format "Jan 2, 2006"}} - {{.EndDate.Format
                         "Jan 2, 2006"}}</span>
                     {{if .Budget}}
-                    <span><i class="fas fa-euro-sign"></i> €{{printf "%.2f" .Budget}}</span>
+                    <span><i class="fas fa-euro-sign"></i> {{printf "%.2f" .Budget}}</span>
                     {{end}}
                 </div>
             </div>

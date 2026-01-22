@@ -76,6 +76,8 @@ func main() {
 		middleware.AuthMiddleware(templateHandler.CreateTripPage)).Methods("GET")
 	r.HandleFunc("/trips/{id}",
 		middleware.OptionalAuthMiddleware(templateHandler.TripDetailPage)).Methods("GET")
+	r.HandleFunc("/trips/{id}/edit",
+		middleware.AuthMiddleware(templateHandler.EditTripPage)).Methods("GET")
 	r.HandleFunc("/profile",
 		middleware.AuthMiddleware(templateHandler.ProfilePage)).Methods("GET")
 

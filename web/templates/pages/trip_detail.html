@@ -59,29 +59,12 @@
             <!-- Budget Section -->
             {{if $trip.Budget}}
             <section class="detail-section">
-                <h2><i class="fas fa-euro-sign"></i> Budget & Expenses</h2>
+                <h2><i class="fas fa-euro-sign"></i> Budget</h2>
                 <div class="budget-info">
                     <div class="budget-amount">
-                        <span class="budget-label">Total Budget</span>
+                        <span class="budget-label">Budget</span>
                         <span class="budget-value">€{{printf "%.2f" $trip.Budget}}</span>
                     </div>
-                    {{if $trip.Expenses}}
-                    {{$spent := 0.0}}
-                    {{range $trip.Expenses}}
-                    {{$spent = addFloat $spent .Amount}}
-                    {{end}}
-                    <div class="budget-spent">
-                        <span class="budget-label">Spent</span>
-                        <span class="budget-value spent">€{{printf "%.2f" $spent}}</span>
-                    </div>
-                    <div class="budget-remaining">
-                        <span class="budget-label">Remaining</span>
-                        <span class="budget-value {{if lt (sub $trip.Budget $spent) 0}}negative{{end}}">
-                            €{{printf "%.2f" (sub $trip.Budget $spent)}}
-                        </span>
-                    </div>
-
-                    {{end}}
                 </div>
             </section>
             {{end}}
@@ -94,13 +77,7 @@
                         <span class="count-badge">{{len $trip.Activities}}</span>
                         {{end}}
                     </h2>
-                    {{if .IsAuthenticated}}
-                    {{if eq $trip.UserID .User.ID}}
-                    <button class="btn btn-small btn-primary">
-                        <i class="fas fa-plus"></i> Add Activity
-                    </button>
-                    {{end}}
-                    {{end}}
+
                 </div>
 
                 {{if $trip.Activities}}
@@ -151,13 +128,7 @@
                         <span class="count-badge">{{len $trip.Expenses}}</span>
                         {{end}}
                     </h2>
-                    {{if .IsAuthenticated}}
-                    {{if eq $trip.UserID .User.ID}}
-                    <button class="btn btn-small btn-primary">
-                        <i class="fas fa-plus"></i> Add Expense
-                    </button>
-                    {{end}}
-                    {{end}}
+
                 </div>
 
                 {{if $trip.Expenses}}
