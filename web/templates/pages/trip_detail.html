@@ -113,10 +113,6 @@
                                 <span class="activity-date">
                                     <i class="far fa-calendar"></i>
                                     {{.Date.Format "Jan 2, 2006"}}
-                                    {{if not .StartTime.IsZero}}
-                                    <i class="far fa-clock"></i>
-                                    {{.StartTime.Format "15:04"}}
-                                    {{end}}
                                 </span>
                             </div>
                             {{if .Location}}
@@ -126,18 +122,6 @@
                             {{end}}
                             {{if .Description}}
                             <p class="activity-description">{{.Description}}</p>
-                            {{end}}
-                            {{if .Rating}}
-                            <div class="activity-rating">
-                                {{range $i := iterate .Rating}}
-                                <i class="fas fa-star"></i>
-                                {{end}}
-                                {{if lt .Rating 5}}
-                                {{range $i := iterate (sub 5 .Rating)}}
-                                <i class="far fa-star"></i>
-                                {{end}}
-                                {{end}}
-                            </div>
                             {{end}}
                         </div>
                     </div>
@@ -183,7 +167,7 @@
                                 .Category "entertainment" }}ticket-alt{{else}}shopping-bag{{end}}"></i>
                         </div>
                         <div class="expense-details">
-                            <h4 class="expense-category">{{.Category | upper}}</h4>
+                            <h4 class="expense-category">{{.Category}}</h4>
                             <span class="expense-date">
                                 <i class="far fa-calendar"></i>
                                 {{.ExpenseDate.Format "Jan 2, 2006"}}
