@@ -77,7 +77,6 @@
                         <span class="count-badge">{{len $trip.Activities}}</span>
                         {{end}}
                     </h2>
-
                 </div>
 
                 {{if $trip.Activities}}
@@ -128,7 +127,6 @@
                         <span class="count-badge">{{len $trip.Expenses}}</span>
                         {{end}}
                     </h2>
-
                 </div>
 
                 {{if $trip.Expenses}}
@@ -232,6 +230,21 @@
                 </div>
             </div>
 
+            <!-- Budget Analysis Card -->
+            {{if .IsAuthenticated}}
+            {{if eq $trip.UserID .User.ID}}
+            {{if $trip.Expenses}}
+            <div class="info-card">
+                <h3><i class="fas fa-chart-pie"></i> Budget Analysis</h3>
+                <button class="btn btn-block btn-primary" onclick="analyzeBudget()">
+                    <i class="fas fa-analytics"></i> Analyze Budget
+                </button>
+                <div id="budgetAnalysis" style="margin-top: 15px;"></div>
+            </div>
+            {{end}}
+            {{end}}
+            {{end}}
+
             <!-- Share Card -->
             {{if $trip.IsPublic}}
             <div class="info-card">
@@ -274,6 +287,76 @@
 </div>
 
 <script>
+    async function analyzeBudget() {
+        const tripId = '{{$trip.ID}}';
+
+        const budgetDiv = document.getElementById('budgetAnalysis');
+        budgetDiv.innerHTML = '<p class="text-muted">Analyzing...</p>';
+
+        try {
+            const response = await fetch(`/api/trips/${tripId}/budget/analyze`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to analyze budget (${response.status})`);
+            }
+
+            const data = await response.json();
+            displayBudgetAnalysis(data);
+
+        } catch (error) {
+            console.error('Budget analysis error:', error);
+            budgetDiv.innerHTML = `<p class="text-danger">Analysis failed. Please try again.</p>`;
+        }
+    }
+    function displayBudgetAnalysis(data) {
+        const div = document.getElementById('budgetAnalysis');
+
+        let html = `
+        <div class="budget-summary" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <h4 style="margin-bottom: 10px; font-size: 1rem;">Budget Summary</h4>
+            <p style="margin: 5px 0;"><strong>Total:</strong> €${data.total_budget.toFixed(2)}</p>
+            <p style="margin: 5px 0;"><strong>Spent:</strong> €${data.total_spent.toFixed(2)}</p>
+            <p style="margin: 5px 0;"><strong>Remaining:</strong> €${data.remaining.toFixed(2)}</p>
+        </div>
+        
+        <h4 style="margin: 15px 0 10px; font-size: 1rem;">Category Breakdown</h4>
+        <ul class="category-list" style="list-style: none; padding: 0;">
+    `;
+
+        data.category_breakdown.forEach(cat => {
+            const icon = cat.status === 'optimal' ? '🎯' :
+                cat.status === 'warning' ? '⚠️' : '✅';
+            html += `
+            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                ${icon} <strong>${cat.category}:</strong> €${cat.total_spent.toFixed(2)} 
+                <span style="color: #666;">(${cat.percentage.toFixed(1)}%)</span>
+            </li>
+        `;
+        });
+
+        html += '</ul>';
+
+        if (data.warnings && data.warnings.length > 0) {
+            html += '<h4 style="margin: 15px 0 10px; font-size: 1rem; color: #dc3545;">⚠️ Warnings</h4><ul style="padding-left: 20px;">';
+            data.warnings.forEach(w => html += `<li style="margin: 5px 0;">${w}</li>`);
+            html += '</ul>';
+        }
+
+        if (data.suggestions && data.suggestions.length > 0) {
+            html += '<h4 style="margin: 15px 0 10px; font-size: 1rem; color: #28a745;">💡 Suggestions</h4><ul style="padding-left: 20px;">';
+            data.suggestions.forEach(s => html += `<li style="margin: 5px 0;">${s}</li>`);
+            html += '</ul>';
+        }
+
+        div.innerHTML = html;
+    }
+
     function shareTrip(platform) {
         const url = window.location.href;
         const title = '{{$trip.Title}}';

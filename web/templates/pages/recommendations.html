@@ -1,0 +1,131 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="page-header">
+    <h1><i class="fas fa-lightbulb"></i> Travel Recommendations</h1>
+    <p>Get personalized destination suggestions</p>
+</div>
+
+<div class="recommendations-container">
+    <div class="filter-panel">
+        <h3>Your Preferences</h3>
+        <div class="form-group">
+            <label>Preferred Destination</label>
+            <input type="text" id="destination" placeholder="e.g., Paris">
+        </div>
+        <div class="form-group">
+            <label>Max Budget (EUR)</label>
+            <input type="number" id="maxBudget" placeholder="1500" min="0">
+        </div>
+        <button class="btn btn-primary" onclick="getRecommendations()">
+            <i class="fas fa-search"></i> Get Recommendations
+        </button>
+    </div>
+
+    <div id="results" class="recommendations-results">
+        <p class="text-muted">Enter your preferences to get recommendations</p>
+    </div>
+</div>
+
+<script>
+    async function getRecommendations() {
+        const destination = document.getElementById('destination').value;
+        const maxBudget = document.getElementById('maxBudget').value;
+        const resultsDiv = document.getElementById('results');
+
+        resultsDiv.innerHTML = '<p class="loading">Loading...</p>';
+
+        try {
+            const response = await fetch(
+                `/api/recommendations?user_id=1&max_budget=${maxBudget}&destination=${destination}`
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch recommendations');
+            }
+
+            const data = await response.json();
+            displayRecommendations(data);
+        } catch (error) {
+            resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+        }
+    }
+
+    function displayRecommendations(data) {
+        const resultsDiv = document.getElementById('results');
+
+        if (!data.recommendations || data.recommendations.length === 0) {
+            resultsDiv.innerHTML = '<p>No recommendations found</p>';
+            return;
+        }
+
+        let html = `<h3>${data.message}</h3><div class="recommendation-grid">`;
+
+        data.recommendations.forEach(rec => {
+            html += `
+            <div class="recommendation-card">
+                <div class="rec-header">
+                    <h4>${rec.destination}</h4>
+                    <span class="match-score">Match: ${Math.round(rec.match_score)}%</span>
+                </div>
+                <p class="rec-description">${rec.description}</p>
+                <div class="rec-details">
+                    <span class="rec-budget">
+                        <i class="fas fa-euro-sign"></i> ${rec.estimated_budget}
+                    </span>
+                    <span class="rec-season">
+                        <i class="fas fa-sun"></i> ${rec.best_season}
+                    </span>
+                </div>
+                <div class="rec-activities">
+                    <strong>Suggested Activities:</strong>
+                    <ul>
+                        ${rec.suggested_activities.map(act => `<li>${act}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+        });
+
+        html += '</div>';
+        resultsDiv.innerHTML = html;
+    }
+</script>
+
+<style>
+    .recommendations-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .recommendation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .recommendation-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .rec-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .match-score {
+        background: #28a745;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+</style>
+{{end}}
