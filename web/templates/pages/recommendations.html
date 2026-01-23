@@ -27,6 +27,9 @@
     </div>
 </div>
 
+<!-- 👇 User ID'yi HTML data attribute olarak ekle -->
+<div id="userContext" data-user-id="{{.User.ID}}" style="display: none;"></div>
+
 <script>
     async function getRecommendations() {
         const destination = document.getElementById('destination').value;
@@ -36,7 +39,9 @@
         resultsDiv.innerHTML = '<p class="loading">Loading...</p>';
 
         try {
-            const userId = '{{$user.ID}}'// 👈 Dinamik user ID
+            // 👇 User ID'yi data attribute'tan al
+            const userId = document.getElementById('userContext').dataset.userId;
+
             const response = await fetch(
                 `/api/recommendations?user_id=${userId}&max_budget=${maxBudget}&destination=${destination}`
             );
@@ -51,6 +56,7 @@
             resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
         }
     }
+
     function displayRecommendations(data) {
         const resultsDiv = document.getElementById('results');
 

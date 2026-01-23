@@ -131,7 +131,7 @@ func main() {
 		}
 
 		grpcServer := grpc.NewServer()
-		recommendationServer := grpcserver.NewRecommendationServer()
+		recommendationServer := grpcserver.NewRecommendationServer(tripService)
 		pb.RegisterRecommendationServiceServer(grpcServer, recommendationServer)
 
 		fmt.Printf("🚀 gRPC Server: localhost%s\n", GRPC_PORT)
