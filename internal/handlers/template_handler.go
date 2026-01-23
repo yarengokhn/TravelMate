@@ -368,3 +368,25 @@ func (h *TemplateHandler) EditTripPage(w http.ResponseWriter, r *http.Request) {
 
 	h.render(w, "edit_trip.html", data)
 }
+
+func (h *TemplateHandler) RecommendationsPage(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userService.GetProfile(userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	data := &TemplateData{
+		Title:           "Recommendations - TravelMate",
+		User:            user,
+		IsAuthenticated: true,
+	}
+
+	h.render(w, "recommendations.html", data)
+}

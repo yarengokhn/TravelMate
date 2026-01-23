@@ -45,7 +45,7 @@ func main() {
 	tripHandler := handlers.NewTripHandler(tripService)
 	templateHandler := handlers.NewTemplateHandler(userService, tripService)
 	wsHandler := handlers.NewWebSocketHandler("localhost:9090", userService)
-
+	recHandler := handlers.NewRecommendationHandler(tripService)
 	// Router
 	r := mux.NewRouter()
 
@@ -80,7 +80,8 @@ func main() {
 		middleware.AuthMiddleware(templateHandler.EditTripPage)).Methods("GET")
 	r.HandleFunc("/profile",
 		middleware.AuthMiddleware(templateHandler.ProfilePage)).Methods("GET")
-
+	r.HandleFunc("/recommendations",
+		middleware.AuthMiddleware(templateHandler.RecommendationsPage)).Methods("GET")
 	// ========== API ROUTES (JSON) ==========
 	api := r.PathPrefix("/api").Subrouter()
 
@@ -106,6 +107,11 @@ func main() {
 		middleware.AuthMiddleware(tripHandler.UpdateTrip)).Methods("PUT")
 	api.HandleFunc("/trips/{id}",
 		middleware.AuthMiddleware(tripHandler.DeleteTrip)).Methods("DELETE")
+
+	// Recommendation routes
+	api.HandleFunc("/recommendations", recHandler.GetRecommendations).Methods("GET")
+	api.HandleFunc("/budget/analyze", recHandler.AnalyzeBudget).Methods("POST")
+	api.HandleFunc("/trips/{id}/budget/analyze", recHandler.AnalyzeBudgetByTripID).Methods("GET")
 
 	// Sunucuyu başlat
 	// ========== TCP CHAT SERVER ==========

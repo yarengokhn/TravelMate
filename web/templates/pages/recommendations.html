@@ -36,8 +36,9 @@
         resultsDiv.innerHTML = '<p class="loading">Loading...</p>';
 
         try {
+            const userId = '{{$user.ID}}'// 👈 Dinamik user ID
             const response = await fetch(
-                `/api/recommendations?user_id=1&max_budget=${maxBudget}&destination=${destination}`
+                `/api/recommendations?user_id=${userId}&max_budget=${maxBudget}&destination=${destination}`
             );
 
             if (!response.ok) {
@@ -50,7 +51,6 @@
             resultsDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
         }
     }
-
     function displayRecommendations(data) {
         const resultsDiv = document.getElementById('results');
 

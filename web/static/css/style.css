@@ -169,7 +169,7 @@ img {
     text-align: center;
 }
 
-/* 
+
 .btn-primary {
     background: var(--primary);
     color: var(--white);
@@ -188,7 +188,7 @@ img {
 .btn-secondary:hover {
     background: #7c3aed;
     color: var(--white);
-} */
+}
 
 .btn-danger {
     background: var(--danger);

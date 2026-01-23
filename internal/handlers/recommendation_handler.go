@@ -6,17 +6,20 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"travel-platform/internal/services"
 	pb "travel-platform/proto"
 
+	mux "github.com/gorilla/mux"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type RecommendationHandler struct {
-	grpcClient pb.RecommendationServiceClient
+	grpcClient  pb.RecommendationServiceClient
+	tripService services.TripService
 }
 
-func NewRecommendationHandler() *RecommendationHandler {
+func NewRecommendationHandler(tripService services.TripService) *RecommendationHandler {
 	// gRPC Server'a bağlan
 	conn, err := grpc.Dial("localhost:50051",
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -25,7 +28,8 @@ func NewRecommendationHandler() *RecommendationHandler {
 	}
 
 	return &RecommendationHandler{
-		grpcClient: pb.NewRecommendationServiceClient(conn),
+		grpcClient:  pb.NewRecommendationServiceClient(conn),
+		tripService: tripService,
 	}
 }
 
@@ -89,6 +93,49 @@ func (h *RecommendationHandler) AnalyzeBudget(w http.ResponseWriter, r *http.Req
 	resp, err := h.grpcClient.AnalyzeBudget(ctx, &pb.BudgetAnalysisRequest{
 		TripId:      req.TripID,
 		TotalBudget: req.TotalBudget,
+		Expenses:    expenses,
+	})
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *RecommendationHandler) AnalyzeBudgetByTripID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tripID, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		http.Error(w, "Invalid trip ID", http.StatusBadRequest)
+		return
+	}
+
+	trip, err := h.tripService.GetTripByID(uint(tripID))
+	if err != nil {
+		http.Error(w, "Trip not found", http.StatusNotFound)
+		return
+	}
+
+	// Expenses'i protobuf formatına çevir
+	var expenses []*pb.Expense
+	for _, exp := range trip.Expenses {
+		expenses = append(expenses, &pb.Expense{
+			Category: exp.Category,
+			Amount:   exp.Amount,
+			Currency: "EUR",
+		})
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// gRPC çağrısı
+	resp, err := h.grpcClient.AnalyzeBudget(ctx, &pb.BudgetAnalysisRequest{
+		TripId:      uint32(tripID),
+		TotalBudget: trip.Budget,
 		Expenses:    expenses,
 	})
 
