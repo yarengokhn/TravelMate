@@ -65,16 +65,6 @@
         <div class="trip-card" data-destination="{{.Destination | lower}}" data-budget="{{.Budget}}"
             data-start-date="{{.StartDate.Format " 2006-01-02"}}" data-month="{{.StartDate.Month}}">
 
-            <div class="trip-card-image">
-                <img src="/static/img/florence.jpg" alt="{{.Destination}}">
-                <div class="trip-card-overlay">
-                    <span class="trip-duration">
-                        <i class="far fa-calendar"></i>
-                        {{$days := daysBetween .StartDate .EndDate}}
-                        {{$days}} {{if eq $days 1}}day{{else}}days{{end}}
-                    </span>
-                </div>
-            </div>
 
             <div class="trip-card-header">
                 <h3>{{.Title}}</h3>
@@ -228,7 +218,10 @@
         let visibleCount = 0;
 
         cards.forEach(card => {
-            if (!month || card.dataset.month === month) {
+            const cardMonth = parseInt(card.dataset.month); // string → integer
+            const filterMonth = parseInt(month); // string → integer
+
+            if (!month || cardMonth === filterMonth) {
                 card.style.display = 'block';
                 visibleCount++;
             } else {
@@ -238,6 +231,7 @@
 
         updateTripCount(visibleCount);
     }
+
 
     function filterByDestination(destination) {
         document.getElementById('searchInput').value = destination;
