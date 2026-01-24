@@ -79,43 +79,46 @@ graph TB
 
 ---
 
-## 📂 Project Structure & Layers (Deep Dive)
+## 📂 Project Structure & Layers
 
-### 1. Network & Entry Level
-- **Core Orchestrator (`main.go`)**: Manages the lifecycle of three concurrent servers:
-  - **HTTP Server (8080)**: Handles web and API traffic.
-  - **TCP Server (9090)**: Dedicated high-performance chat service.
-  - **gRPC Server (50051)**: Internal service for complex recommendations.
+### 1. Entry Point (`/cmd`)
+- **`cmd/web/main.go`**: The heart of the application. It initializes the database, wires up the repository, service, and handler layers, defines routes, and starts the HTTP, TCP, and gRPC servers.
 
-### 2. Application Logic Layers
-- **Models (`internal/models`)**: Defines the source of truth for data structures. Uses GORM tags for automated schema mapping.
-- **Repositories (`internal/repository`)**: Implements the *Repository Pattern*. Each repository is defined by an interface, allowing the database to be swapped (e.g., SQLite to PostgreSQL) without changing business logic.
-- **Services (`internal/services`)**: The "brain" of the app. Handles data validation, password hashing (Bcrypt), and complex business rules.
-- **Handlers (`internal/handlers`)**: The "connectors". They translate network protocols (HTTP/JSON/Templates) into service calls.
+### 2. Internal Logic (`/internal`)
+- **`models/`**: Defines the data structures (e.g., `User`, `Trip`, `Expense`) used across all layers and for database mapping (GORM).
+- **`repository/`**: Abstraction layer for data persistence. Interacts directly with the GORM DB instance.
+- **`services/`**: Contains core business logic (e.g., authentication rules, budget calculations). It sits between handlers and repositories.
+- **`handlers/`**: Manages incoming requests.
+    - **Template Handlers**: Render HTML pages using Go templates.
+    - **API Handlers**: Handle JSON-based RESTful requests.
+- **`middleware/`**: Cross-cutting concerns like logging and session-based authentication.
+- **`database/`**: Handles SQLite connection and GORM auto-migrations.
+- **`chat/`**: Implements the TCP chat server logic.
+- **`grpc/`**: Implements the gRPC server for recommendation services.
 
-### 3. Real-time & RPC Services
-- **`internal/chat`**: Implements a broadcast hub for TCP clients. Manages connection pools and message distribution.
-- **`internal/grpc`**: Implements the logic for `AnalyzeBudget` and `GetRecommendations`. It uses Protobuf for high-speed serialization.
-
-### 4. Frontend Ecosystem
-- **Rendering**: Uses `html/template` for secure, server-side HTML generation.
-- **Dynamic Assets**:
-  - `main.js`: Core UI logic, form handling, and global event listeners.
-  - `profile.js` / `dashboard.js`: Feature-specific interactive elements.
-  - `style.css`: Comprehensive design system built with vanilla CSS variables.
+### 3. Frontend (`/web`)
+- **`templates/`**: Server-side rendered HTML files using Go's `html/template` engine. Organized into `layouts/`, `partials/`, and `pages/`.
+- **`static/`**: Client-side assets including Vanilla CSS for styling and JavaScript for dynamic UI interactions (e.g., AJAX calls, Chart.js for data visualization).
 
 ---
 
-## 🔄 Lifecycle of a Budget Analysis Request
+## 🔄 Internal Flow & Processes
 
-1. **User Action**: User clicks "Analyze Budget" in the Trip Detail page.
-2. **Frontend**: `main.js` collects expense data from the DOM and sends a `GET` request to `/api/trips/{id}/budget/analyze`.
-3. **HTTP Handler**: `RecommendationHandler.AnalyzeBudgetByTripID` is triggered.
-4. **Service Call**: Handler fetches the trip data using `TripService`.
-5. **gRPC Transition**: Handler transforms the Go struct data into a `pb.BudgetAnalysisRequest`.
-6. **RPC Execution**: The request is sent to the local gRPC server (Port 50051).
-7. **Processing**: `RecommendationServer` calculates percentages, flags warnings, and generates suggestions.
-8. **JSON Delivery**: The result flows back to the Handler, gets encoded to JSON, and is updated on the UI via JavaScript.
+### 1. Request Lifecycle (HTTP)
+1. **Inbound**: A user visits a URL (e.g., `/dashboard`).
+2. **Middleware**: `AuthMiddleware` checks if the user is logged in (session cookie/context).
+3. **Handler**: `TemplateHandler.Dashboard` is called.
+4. **Service**: Handler calls `TripService.GetMyTrips(userID)`.
+5. **Repository**: Service calls `TripRepository.FindTripsByUserID(userID)`.
+6. **Database**: GORM executes the SQL query against `travel-platform.db`.
+7. **Response**: Data flows back up; the handler executes the HTML template with the data and returns it to the browser.
+
+### 2. Real-time Communication (WebSocket/TCP)
+- **Web Chat**: Uses Gorilla WebSocket. Messages are handled by `WebSocketHandler`, allowing real-time interaction between users in the same trip context.
+- **Direct Chat**: A separate TCP server (port 9090) allows direct raw socket connections for low-level chat functionality.
+
+### 3. Recommendation Engine (gRPC)
+- The web server acts as a gRPC client (internally or to its own gRPC server on port 50051) to fetch trip recommendations, separating intensive logic from the main web loop.
 
 ---
 
