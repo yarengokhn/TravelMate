@@ -17,8 +17,8 @@ Before you begin, ensure you have the following installed on your system:
 
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
-   cd TravelMate_Web_App/TravelMate
+   git clone https://github.com/yarengokhn/TravelMate.git
+   cd .\TravelMate\
    ```
 
 2. **Download Dependencies**:
@@ -32,8 +32,6 @@ Before you begin, ensure you have the following installed on your system:
 ---
 
 ## 🚀 Running Locally
-
-The project consists of multiple services that run concurrently within the main web server.
 
 ### 1. Start the Main Web Server
 This command launches the HTTP web interface, the gRPC recommendation service, and the TCP chat server.
