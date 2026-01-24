@@ -75,48 +75,7 @@ document.getElementById('registerForm')?.addEventListener('submit', async functi
     }
 });
 
-// Create Trip Form Handler
-document.getElementById('createTripForm')?.addEventListener('submit', async function (e) {
-    e.preventDefault();
 
-    const formData = {
-        title: document.getElementById('title').value,
-        destination: document.getElementById('destination').value,
-        start_date: document.getElementById('start_date').value,
-        end_date: document.getElementById('end_date').value,
-        description: document.getElementById('description').value,
-        budget: parseFloat(document.getElementById('budget').value) || 0,
-        is_public: document.getElementById('is_public').checked
-    };
-
-    // Validate dates
-    if (new Date(formData.start_date) > new Date(formData.end_date)) {
-        showAlert('End date must be after start date', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/trips', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-
-        if (response.ok) {
-            showAlert('Trip created successfully!', 'success');
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 1500);
-        } else {
-            const error = await response.json();
-            showAlert(error.message || 'Failed to create trip', 'error');
-        }
-    } catch (err) {
-        showAlert('An error occurred. Please try again.', 'error');
-    }
-});
 
 // Delete Trip Function
 async function deleteTrip(tripId) {
@@ -198,21 +157,5 @@ setTimeout(() => {
     });
 }, 5000);
 
-// Date Input Min Value (for create trip form)
-const today = new Date().toISOString().split('T')[0];
-document.querySelectorAll('input[type="date"]').forEach(input => {
-    if (!input.hasAttribute('min')) {
-        input.setAttribute('min', today);
-    }
-});
-
-// End Date Auto Update (when start date changes)
-document.getElementById('start_date')?.addEventListener('change', function () {
-    const endDateInput = document.getElementById('end_date');
-    if (endDateInput.value && new Date(this.value) > new Date(endDateInput.value)) {
-        endDateInput.value = this.value;
-    }
-    endDateInput.setAttribute('min', this.value);
-});
 
 

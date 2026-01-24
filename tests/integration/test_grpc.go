@@ -1,4 +1,4 @@
-// test_grpc.go - Ana dizinde çalıştırın: go run test_grpc.go
+// test_grpc.go - Run in root directory: go run test_grpc.go
 package main
 
 import (
@@ -13,56 +13,56 @@ import (
 )
 
 func main() {
-	fmt.Println("🔌 gRPC Server'a bağlanılıyor...")
+	fmt.Println("🔌 Connecting to gRPC Server...")
 
 	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("❌ Bağlantı başarısız: %v", err)
+		log.Fatalf("❌ Connection failed: %v", err)
 	}
 	defer conn.Close()
 
-	fmt.Println("✅ Bağlantı başarılı!\n")
+	fmt.Println("✅ Connection successful!\n")
 
 	client := pb.NewRecommendationServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	fmt.Println("╔═══════════════════════════════════════════════╗")
-	fmt.Println("║          gRPC Client - Test Başladı          ║")
+	fmt.Println("║          gRPC Client - Test Started           ║")
 	fmt.Println("╚═══════════════════════════════════════════════╝\n")
 
-	// ========== TEST 1: Seyahat Önerileri ==========
-	fmt.Println("📍 TEST 1: Seyahat Önerileri")
+	// ========== TEST 1: Travel Recommendations ==========
+	fmt.Println("📍 TEST 1: Travel Recommendations")
 	fmt.Println("─────────────────────────────────────────────────")
 
 	recReq := &pb.RecommendationRequest{
 		UserId:               1,
-		PreferredDestination: "",
+		PreferredDestination: "Rome, Italy",
 		MaxBudget:            1500,
 	}
 
 	recResp, err := client.GetRecommendations(ctx, recReq)
 	if err != nil {
-		log.Fatalf("❌ Hata: %v", err)
+		log.Fatalf("❌ Error: %v", err)
 	}
 
 	fmt.Printf("✅ %s\n\n", recResp.Message)
 
 	for i, rec := range recResp.Recommendations {
 		fmt.Printf("🌍 %d. %s\n", i+1, rec.Destination)
-		fmt.Printf("   💰 Bütçe: €%.0f\n", rec.EstimatedBudget)
-		fmt.Printf("   ⭐ Puan: %.0f/100\n", rec.MatchScore)
+		fmt.Printf("   💰 Budget: €%.0f\n", rec.EstimatedBudget)
+		fmt.Printf("   ⭐ Score: %.0f/100\n", rec.MatchScore)
 		fmt.Printf("   📝 %s\n", rec.Description)
-		fmt.Printf("   🌞 En İyi Sezon: %s\n", rec.BestSeason)
-		fmt.Printf("   🎯 Aktiviteler:\n")
+		fmt.Printf("   🌞 Best Season: %s\n", rec.BestSeason)
+		fmt.Printf("   🎯 Activities:\n")
 		for _, act := range rec.SuggestedActivities {
 			fmt.Printf("      - %s\n", act)
 		}
 		fmt.Println()
 	}
 
-	// ========== TEST 2: Bütçe Analizi ==========
-	fmt.Println("💰 TEST 2: Bütçe Analizi")
+	// ========== TEST 2: Budget Analysis ==========
+	fmt.Println("💰 TEST 2: Budget Analysis")
 	fmt.Println("─────────────────────────────────────────────────")
 
 	budgetReq := &pb.BudgetAnalysisRequest{
@@ -78,14 +78,14 @@ func main() {
 
 	budgetResp, err := client.AnalyzeBudget(ctx, budgetReq)
 	if err != nil {
-		log.Fatalf("❌ Hata: %v", err)
+		log.Fatalf("❌ Error: %v", err)
 	}
 
-	fmt.Printf("💵 Toplam Bütçe: €%.2f\n", budgetResp.TotalBudget)
-	fmt.Printf("💸 Harcanan:     €%.2f\n", budgetResp.TotalSpent)
-	fmt.Printf("💰 Kalan:        €%.2f\n\n", budgetResp.Remaining)
+	fmt.Printf("💵 Total Budget: €%.2f\n", budgetResp.TotalBudget)
+	fmt.Printf("💸 Spent:        €%.2f\n", budgetResp.TotalSpent)
+	fmt.Printf("💰 Remaining:    €%.2f\n\n", budgetResp.Remaining)
 
-	fmt.Println("📊 Kategori Analizi:")
+	fmt.Println("📊 Category Analysis:")
 	for _, cat := range budgetResp.CategoryBreakdown {
 		icon := "✅"
 		if cat.Status == "warning" {
@@ -98,20 +98,20 @@ func main() {
 	}
 
 	if len(budgetResp.Warnings) > 0 {
-		fmt.Println("\n⚠️  Uyarılar:")
+		fmt.Println("\n⚠️  Warnings:")
 		for _, w := range budgetResp.Warnings {
 			fmt.Printf("   %s\n", w)
 		}
 	}
 
 	if len(budgetResp.Suggestions) > 0 {
-		fmt.Println("\n💡 Öneriler:")
+		fmt.Println("\n💡 Suggestions:")
 		for _, s := range budgetResp.Suggestions {
 			fmt.Printf("   %s\n", s)
 		}
 	}
 
 	fmt.Println("\n╔═══════════════════════════════════════════════╗")
-	fmt.Println("║        ✅ Testler Başarıyla Tamamlandı!      ║")
+	fmt.Println("║        ✅ Tests Completed Successfully!       ║")
 	fmt.Println("╚═══════════════════════════════════════════════╝")
 }
