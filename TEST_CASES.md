@@ -35,7 +35,7 @@ go test -v tests/recommendation_server_test.go
 
 ### 3. Running gRPC Integration Test
 The `TestGRPCIntegration` (in `grpc_test.go`) connects to a live gRPC server. 
-1. Start your server: `go run cmd/web/main.go`
+1. Start the server: `go run cmd/web/main.go`
 2. Run the test: `go test -v -run TestGRPCIntegration ./tests/`
 
 ## Key Testing Technologies
@@ -43,9 +43,3 @@ The `TestGRPCIntegration` (in `grpc_test.go`) connects to a live gRPC server.
 - **GORM + SQLite (In-Memory)**: Used to test database interactions without persistent storage.
 - **Context & httptest**: Used for testing time-sensitive and network operations.
 
-## Adding New Tests
-When adding new tests to the `tests/` directory:
-1. Ensure the filename ends with `_test.go`.
-2. Use `package tests`.
-3. Import the necessary internal packages (e.g., `travel-platform/internal/services`).
-4. Use the package prefix when calling functions (e.g., `services.NewUserService`).
