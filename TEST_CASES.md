@@ -1,7 +1,5 @@
 # TravelMate Test Cases Documentation
 
-This document describes the test cases implemented for the TravelMate project and provides instructions on how to execute them.
-
 ## Test Structure
 
 All tests are located in the `tests/` directory and belong to the `tests` package. This structure allows for external testing of the application's components.
