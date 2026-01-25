@@ -10,7 +10,6 @@ TravelMate is a comprehensive web application designed for travelers to plan the
     - Web-based chat via WebSockets.
     - Independent TCP Chat server and CLI client.
 - **Smart Recommendations:** gRPC-based recommendation service.
-- **Profile Management:** Create and customize your traveler profile.
 - **Dashboard:** A user-friendly overview of all your planned trips.
 
 ## 🛠️ Tech Stack
