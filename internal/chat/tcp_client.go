@@ -81,7 +81,7 @@ func (c *ChatClient) readFromStdin() error {
 		}
 
 		// Sunucuya gönder
-		_, err = fmt.Fprintf(c.conn, text)
+		_, err = fmt.Fprint(c.conn, text)
 		if err != nil {
 			return fmt.Errorf("error sending message: %v", err)
 		}

@@ -1,10 +1,10 @@
-// test_grpc.go - Run in root directory: go run test_grpc.go
-package main
+// tests/grpc_test.go
+package tests
 
 import (
 	"context"
 	"fmt"
-	"log"
+	"testing"
 	"time"
 	pb "travel-platform/proto"
 
@@ -12,16 +12,19 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func main() {
+func TestGRPCIntegration(t *testing.T) {
+	// Skip this test if you don't want to depend on a running server
+	// t.Skip("Skipping integration test; requires a running gRPC server")
+
 	fmt.Println("🔌 Connecting to gRPC Server...")
 
 	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("❌ Connection failed: %v", err)
+		t.Fatalf("❌ Connection failed: %v", err)
 	}
 	defer conn.Close()
 
-	fmt.Println("✅ Connection successful!\n")
+	fmt.Println("✅ Connection successful!")
 
 	client := pb.NewRecommendationServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
@@ -29,7 +32,7 @@ func main() {
 
 	fmt.Println("╔═══════════════════════════════════════════════╗")
 	fmt.Println("║          gRPC Client - Test Started           ║")
-	fmt.Println("╚═══════════════════════════════════════════════╝\n")
+	fmt.Println("╚═══════════════════════════════════════════════╝")
 
 	// ========== TEST 1: Travel Recommendations ==========
 	fmt.Println("📍 TEST 1: Travel Recommendations")
@@ -43,7 +46,7 @@ func main() {
 
 	recResp, err := client.GetRecommendations(ctx, recReq)
 	if err != nil {
-		log.Fatalf("❌ Error: %v", err)
+		t.Fatalf("❌ Error: %v", err)
 	}
 
 	fmt.Printf("✅ %s\n\n", recResp.Message)
@@ -78,7 +81,7 @@ func main() {
 
 	budgetResp, err := client.AnalyzeBudget(ctx, budgetReq)
 	if err != nil {
-		log.Fatalf("❌ Error: %v", err)
+		t.Fatalf("❌ Error: %v", err)
 	}
 
 	fmt.Printf("💵 Total Budget: €%.2f\n", budgetResp.TotalBudget)
