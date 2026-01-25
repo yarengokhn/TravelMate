@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func TestGRPCIntegration(t *testing.T) {
+func TestGRPC(t *testing.T) {
 	// Skip this test if you don't want to depend on a running server
 	// t.Skip("Skipping integration test; requires a running gRPC server")
 

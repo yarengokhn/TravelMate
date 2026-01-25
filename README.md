@@ -32,7 +32,9 @@ TravelMate is a comprehensive web application designed for travelers to plan the
 - `cmd/chatclient`: CLI-based TCP chat client.
 - `internal/`: Core application logic (Repository, Service, Handler, Middleware).
 - `proto/`: gRPC service definitions and generated files.
-- `web/`: HTML templates (`templates`) and static assets (`static`).
+- `web/`: HTML templates (`templates`) and static assets 
+(`static`).
+- `tests/`: Test files.
 
 ## ⚙️ Installation & Running
 
